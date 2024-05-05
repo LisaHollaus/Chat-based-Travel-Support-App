@@ -52,9 +52,9 @@ while True:
         if welcome.decode() != "user not found":
             print(welcome.decode())
             break
-        print("user not found")
+        print(welcome.decode()) # user not found
     
-    print("please, try again and enter 'yes' or 'no'")
+    print("\nplease, try again from the start\n")
    
 
 

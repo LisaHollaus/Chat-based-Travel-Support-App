@@ -14,10 +14,9 @@ def handle_client(conn, addr): # delegates the conversation of clients
     
     
     # login or register
-    ## to do: check if user exists
     while True:
         msg = conn.recv(4096)  # receive a answer from the client
-        if msg.decode().lower() == "yes": ### using .lower?
+        if msg.decode().lower() == "yes": 
             conn.send("Are you a provider or a traveller? ".encode())
             type = conn.recv(4096)
             if type.decode().lower() != "provider" and type.decode().lower() != "traveller":
@@ -30,9 +29,10 @@ def handle_client(conn, addr): # delegates the conversation of clients
 
             ### create a new user with type & password if not jet existing
             user = Agency.get_instance().create_user(name.decode(), type.decode(), password.decode())
-            if user == "user already exists":
+            if user is None:
                 conn.send("user already exists".encode())
                 continue
+            print(f"user: {name.decode()} logged in")
             msg = f"welcome {name.decode()}!"
             conn.send(msg.encode())
             break
@@ -42,21 +42,29 @@ def handle_client(conn, addr): # delegates the conversation of clients
             name = conn.recv(4096)
             conn.send("please enter your password: ".encode())
             password = conn.recv(4096)
-            # check if the user and id is existing
-            user = Agency.get_user(name.decode(), password.decode())
-            
-            
-            ##### get the user and id from the database
-            
+
+            # check if the user and password is existing
+            user = Agency.get_instance().get_user(name.decode(), password.decode())
             if user is None:
                 conn.send("user not found".encode())
                 continue
-            print(f"user: {id.decode()} logged in")
-            conn.send("welcome back! ".encode())
+            print(f"user: {name.decode()} logged in")
+            welcome = f"welcome back {name.decode()}!"
+            conn.send(welcome.encode())
             break
-        
 
 
+    ###next: show menu (use functions)    
+    
+
+
+
+
+
+
+
+    
+    # conn.close()  # leaving the conversation open for other clients to connect
 
 
 # to handle multiple clients
