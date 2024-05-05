@@ -1,6 +1,9 @@
-from .traveller import Traveller
+from .traveller import User
 
-class Provider(Traveller):
-    def __init__(self, name, address, traveller_id):
-        super().__init__(name, address, traveller_id)
+#### inherits base too?
+## needed?
+
+class Provider(User):
+    def __init__(self, name, address, id):
+        super().__init__(name, address, id)
         # self.attractions = [] inherited from Traveller
