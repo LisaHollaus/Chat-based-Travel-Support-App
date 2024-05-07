@@ -8,7 +8,6 @@ print(msg.decode())
 
 
 # login or register
-## to do: check if user exists and add password 
 while True:
     msg = input("Are you new here? \n>>> ")  # input "yes" or "no"
 
@@ -55,8 +54,96 @@ while True:
         print(welcome.decode()) # user not found
     
     print("\nplease, try again from the start\n")
-   
 
 
-## calling a menu function
+# while logged in as traveller:
+if type.lower() == "traveller":
+    while True:
+        
+        ##### listing the options of what to do:
+
+
+
+        destinations = s.recv(4096)  # receive the destinations
+        print("Where would you like to go?")
+        for destination in destinations.decode(): ####.split(","):
+            print(f"{destination}\n")
+        destination = input(">>> ")
+        s.send(destination.encode())
+        
+
+        
+
+
+
+        # listing the options
+        options = s.recv(4096)
+        print("What are you looking for?")
+        for option in options.decode(): ####.split(","):
+            print(f"{option}s\n")
+        option = input(">>> ")
+        s.send(option.encode())
+
+        # listing the specific attractions 
+        #attractions = s.recv(4096)
+
+
+# while logged in as provider:
+elif type.lower() == "provider":
+    while True:
+        options = s.recv(4096)  # receive the options
+        print("What do you want to do now?")
+        for option in options.decode():
+            print(f"{option}\n")
+        option = input("Enter the number\n>>> ")
+        s.send(option.encode())
+
+        # add a new attraction
+        if option == "1":
+            print("Please fill out this form to add an attraction:")
+            question = s.recv(4096) # "Name of the attraction: "
+            print(question.decode())
+            name = input(">>> ")
+            s.send(name.encode())
+            question = s.recv(4096) # "Destination (e.g. Vienna): "
+            destination = input(">>> ")
+            s.send(destination.encode())
+            question = s.recv(4096) # "Type of the attraction (e.g. Restaurant): "
+            type = input(">>> ")
+            s.send(type.encode())
+            question = s.recv(4096) # "Price range: "
+            price_range = input(">>> ")
+            s.send(price_range.encode())
+            question = s.recv(4096) # "Description of the attraction: "
+            description = input(">>> ")
+            s.send(description.encode())
+            question = s.recv(4096) # "Contact: "
+            contact = input(">>> ")
+            s.send(contact.encode())
+            question = s.recv(4096) # "Special offer: "
+            special_offer = input(">>> ")
+            s.send(special_offer.encode())
+
+            # receive the confirmation
+            confirmation = s.recv(4096)
+            if confirmation.decode():
+                print(confirmation.decode()) # "Attraction added!"
+            else:
+                print(f"A attraction with the name '{name}' already exists in {destination}!")
+
+
+        elif option == "2":
+            pass
+        elif option == "3":
+            pass
+        elif option == "4":
+            pass
+        elif option == "5":
+            break
+
+
+print("Goodbye!")
+s.close()  # close the connection
+
+
 

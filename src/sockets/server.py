@@ -53,10 +53,53 @@ def handle_client(conn, addr): # delegates the conversation of clients
             conn.send(welcome.encode())
             break
 
+    type = Agency.get_instance().loged_in_user.type
 
-    ###next: show menu (use functions)    
+    # while logged in as traveller:
+    if type == "traveller":
+        while True:
+            destinations = Agency.get_instance().get_destinations()
+            conn.send(destinations.encode())
+            destination = conn.recv(4096)
+            options = Agency.get_instance().get_options_traveller(destination.decode())
+            conn.send(options.encode())
     
+    # while logged in as provider:
+    elif type == "provider":
+        while True:
+            options = Agency.get_instance().get_options_provider()
+            conn.send(options.encode())
+            decission = conn.recv(4096)
 
+            # add a new attraction
+            if decission.decode() == "1": 
+                conn.send("Name of the attraction: ".encode())
+                attraction = conn.recv(4096)
+                conn.send("Destination (e.g. Vienna): ".encode())
+                destination = conn.recv(4096)
+                conn.send("Type of the attraction (e.g. Restaurant): ".encode())
+                type = conn.recv(4096)
+                conn.send("Price range: ".encode())
+                price = conn.recv(4096)
+                conn.send("Description of the attraction: ".encode())
+                description = conn.recv(4096)
+                conn.send("Contact information (e.g. addresse, email, website,..): ".encode())
+                address = conn.recv(4096)
+                conn.send("Special offers: ".encode())
+                special_offer = conn.recv(4096)
+                # add the attraction
+                attraction = Agency.get_instance().add_attraction(attraction.decode(), destination.decode(), type.decode(), price.decode(), description.decode(), address.decode(), special_offer.decode())
+                return attraction # return the attraction (none if not added)
+
+            
+            
+            # remove attraction
+            elif decission.decode() == "2": 
+                pass
+            elif decission.decode() == "3": # update attraction
+                pass
+            elif decission.decode() == "4": # view attractions
+                pass 
 
 
 
