@@ -19,7 +19,7 @@ class Agency(object):
         #self.destinations = destinations
         self.engine = create_engine('sqlite:///travel_app.db', echo=True)
         #self.connection = self.engine.connect() # connect to the database
-        self.loged_in_users = None # to keep track of the loged in user
+        self.loged_in_user = None # to keep track of the loged in user
 
     @staticmethod
     def get_instance():

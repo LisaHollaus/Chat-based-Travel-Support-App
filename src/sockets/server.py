@@ -1,5 +1,6 @@
 import socket
 import threading
+import json
 
 from model.agency import Agency
 
@@ -10,19 +11,18 @@ s.listen()  # listen for incoming connections
 
 def handle_client(conn, addr): # delegates the conversation of clients
     print(f"new connection from {addr}")
-    conn.send("welcome to the App!".encode()) 
+    conn.send("welcome to the App! \nAre you a traveller or a provider?".encode()) 
+    type = conn.recv(4096)
+    while type.decode().lower() != "provider" and type.decode().lower() != "traveller":
+        type = conn.recv(4096)
     
-    
+
     # login or register
     while True:
-        msg = conn.recv(4096)  # receive a answer from the client
+        msg = conn.recv(4096) 
+        # create a new user:
         if msg.decode().lower() == "yes": 
-            conn.send("Are you a provider or a traveller? ".encode())
-            type = conn.recv(4096)
-            if type.decode().lower() != "provider" and type.decode().lower() != "traveller":
-                continue
-
-            conn.send("please enter your username: ".encode())
+            conn.send("please enter your new username: ".encode())
             name = conn.recv(4096)
             conn.send("please enter you new password: ".encode())
             password = conn.recv(4096)
@@ -36,7 +36,8 @@ def handle_client(conn, addr): # delegates the conversation of clients
             msg = f"welcome {name.decode()}!"
             conn.send(msg.encode())
             break
-            
+
+        # if user already exists: 
         elif msg.decode().lower() == "no": 
             conn.send("please enter your username: ".encode())
             name = conn.recv(4096)
@@ -53,22 +54,26 @@ def handle_client(conn, addr): # delegates the conversation of clients
             conn.send(welcome.encode())
             break
 
-    type = Agency.get_instance().loged_in_user.type
+    
+
 
     # while logged in as traveller:
-    if type == "traveller":
+    if type.decode() == "traveller":
         while True:
             destinations = Agency.get_instance().get_destinations()
-            conn.send(destinations.encode())
+            destinations_str = ",".join(destinations)  # convert the list to a string
+            conn.send(destinations_str).encode()
             destination = conn.recv(4096)
             options = Agency.get_instance().get_options_traveller(destination.decode())
-            conn.send(options.encode())
+            options_str = ",".join(options)  # convert the list to a string
+            conn.send(options_str).encode()
     
     # while logged in as provider:
-    elif type == "provider":
+    elif type.decode() == "provider":
         while True:
             options = Agency.get_instance().get_options_provider()
-            conn.send(options.encode())
+            options_str = json.dumps(options)  # convert the dictionary to a JSON string
+            conn.send(options_str.encode())
             decission = conn.recv(4096)
 
             # add a new attraction

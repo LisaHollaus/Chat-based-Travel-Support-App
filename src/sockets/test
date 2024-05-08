@@ -1,0 +1,7 @@
+v = ["23", "ew"]
+v = str(v)
+print(v)
+print(list(v))
+di = {"name": "ew", "age": 23}
+di = str(di)
+print(list(di))
