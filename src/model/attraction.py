@@ -28,4 +28,4 @@ class Attraction(Base):
 
 # create engine:
 engine = create_engine('sqlite:///travel_app.db', echo=True)
-Base.metadata.create_all(engine) #### create database/ table?
+Base.metadata.create_all(engine) # creates table when it does not exist

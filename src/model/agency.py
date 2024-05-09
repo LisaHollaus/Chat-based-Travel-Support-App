@@ -77,8 +77,13 @@ class Agency(object):
         attractions = sorted(list(set([attraction.attraction_type for attraction in attractions]))) # remove duplicates and convert to a sorted list 
         return attractions
 
+
+
+
+# provider functions:
+
     def get_options_provider(self):
-        return [{1: "1) add attraction"}, {2: "2) remove attraction"}, {3: "3) update attraction"}, {4: "4) view attractions"}, {5: "5) logout"}]
+        return {1: "add attraction", 2: "remove attraction", 3: "update attraction", 4: "view attractions", 5: "logout"}
     
     def add_attraction(self, name, destination, attraction_type, price_range, description, contact, special_offer):
         session = self.start_session()
@@ -99,5 +104,15 @@ class Agency(object):
         session.close()
         return attraction
         
+    def remove_attraction(self, name, destination):
+        session = self.start_session()
+        attraction = session.query(Attraction).filter(Attraction.name == name, Attraction.destination == destination).first()
+        if attraction:
+            session.delete(attraction)
+            session.commit()
+            session.close()
+            return attraction
+        session.close()
+        return None
 
     

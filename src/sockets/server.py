@@ -70,10 +70,11 @@ def handle_client(conn, addr): # delegates the conversation of clients
     
     # while logged in as provider:
     elif type.decode() == "provider":
+        options = Agency.get_instance().get_options_provider()
+        options_str = json.dumps(options)  # convert the dictionary to a JSON string
+        conn.send(options_str.encode())
+        
         while True:
-            options = Agency.get_instance().get_options_provider()
-            options_str = json.dumps(options)  # convert the dictionary to a JSON string
-            conn.send(options_str.encode())
             decission = conn.recv(4096)
 
             # add a new attraction
@@ -94,15 +95,23 @@ def handle_client(conn, addr): # delegates the conversation of clients
                 special_offer = conn.recv(4096)
                 # add the attraction
                 attraction = Agency.get_instance().add_attraction(attraction.decode(), destination.decode(), type.decode(), price.decode(), description.decode(), address.decode(), special_offer.decode())
-                return attraction # return the attraction (none if not added)
+                conn.send(attraction.encode()) # sends the attraction (none if not added)
+         
 
-            
-            
             # remove attraction
             elif decission.decode() == "2": 
+                conn.send("What is the name of the attraction would you like to remove? ".encode())
+                name = conn.recv(4096)
+                conn.send("What is the destination of the attraction you would like to remove? ".encode())
+                destination = conn.recv(4096)
+                # remove the attraction
+                attraction = Agency.get_instance().remove_attraction(name.decode(), destination.decode())
+                conn.send(attraction.encode()) # sends the attraction (none if not found)            
+
+            # update attraction
+            elif decission.decode() == "3": 
                 pass
-            elif decission.decode() == "3": # update attraction
-                pass
+            
             elif decission.decode() == "4": # view attractions
                 pass 
 

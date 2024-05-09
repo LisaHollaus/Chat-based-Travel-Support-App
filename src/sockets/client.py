@@ -5,8 +5,8 @@ import json
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # create a socket
 s.connect(("localhost", 9000))  # connect to the server
 
-msg = s.recv(4096)  # receive "welcome to the App! Are you a traveller or a provider?"
-print(msg.decode())
+# receive "welcome to the App! Are you a traveller or a provider?"
+print(s.recv(4096) .decode())
 type = input(">>> ")  # input "traveller" or "provider"
 while type.lower() != "provider" and type.lower() != "traveller":
     print("please enter 'provider' or 'traveller'")
@@ -94,13 +94,12 @@ if type.lower() == "traveller":
 
 # while logged in as provider:
 elif type.lower() == "provider":
-    while True:
-        options_str = s.recv(4096)  # receive the options
-        options = json.loads(options_str.decode()) # convert the json string to a dictionary
+    options_str = s.recv(4096)  # receive the options
+    options = json.loads(options_str.decode()) # convert the json string to a dictionary
+    while True:    
         print("What do you want to do now?")
-        print(options)
-        for option in options.values():
-            print(f"{option}\n")
+        for key, value in options.items():
+            print(f"{key}) {value}")
         option = input("Enter the number\n>>> ")
         s.send(option.encode())
 
@@ -133,19 +132,33 @@ elif type.lower() == "provider":
             # receive the confirmation
             confirmation = s.recv(4096)
             if confirmation.decode():
-                print(confirmation.decode()) # "Attraction added!"
+                print(f"{confirmation.decode()}\n") # "Attraction added!"
             else:
-                print(f"A attraction with the name '{name}' already exists in {destination}!")
+                print(f"A attraction with the name '{name}' already exists in {destination}!\n")
 
+        # remove an attraction
+        elif option == "2":  
+            print(s.recv(4096).decode()) # "What is the name of the attraction you would like to remove?"
+            name = input(">>> ")
+            s.send(name.encode())
+            print(s.recv(4096).decode()) # "What is the destination of the attraction you would like to remove?"
+            destination = input(">>> ")
+            s.send(destination.encode())
+            confirmation = s.recv(4096)
+            if confirmation.decode():
+                print("Attraction removed!") 
+            else: 
+                print("Attraction not found!") 
 
-        elif option == "2":
-            pass
         elif option == "3":
             pass
         elif option == "4":
             pass
-        elif option == "5":
+
+        # logout
+        elif option == "5": 
             break
+        print("\nplease enter a number\n")
 
 
 print("Goodbye!")

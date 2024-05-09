@@ -17,13 +17,7 @@ class User(Base):
     def __init__(self):
         pass
 
-    # def __init__(self, name, type, password):
-    #      #self.id = id
-    #      self.name = name
-    #      self.password = password
-    #      self.attractions = []
-
 
 # create engine:
-engine = create_engine('sqlite:///travel_app.db', echo=True)
-Base.metadata.create_all(engine) # create database
+engine = create_engine('sqlite:///travel_app.db', echo=True) 
+Base.metadata.create_all(engine) # create the tables in the database
