@@ -127,13 +127,21 @@ class Agency(object):
     def remove_attraction(self, name, destination):
         session = self.start_session()
         attraction = session.query(Attraction).filter(Attraction.name == name, Attraction.destination == destination).first()
-        if attraction and (attraction in self.loged_in_user_id.attractions): # check if the attraction exists and if it belongs to the provider
-            session.delete(attraction)
-            session.commit()
-            session.close()
-            return attraction
+
+        if attraction: # check if the attraction exists
+            if attraction.provider_id == self.loged_in_user_id: # check if it belongs to the provider
+                session.delete(attraction)
+                session.commit()
+                
+                attraction = session.query(Attraction).filter(Attraction.name == name, Attraction.destination == destination).first()
+                session.close()
+                return attraction # return None if the attraction was removed
+            else:
+                session.close()
+                return "Attraction belongs to another provider!"
+            
         session.close()
-        return None
+        return "Attraction not found!"
     
     def get_attraction(self, name, destination):
         session = self.start_session()

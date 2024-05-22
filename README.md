@@ -21,8 +21,8 @@ A chat based Travel-Support-App
 
 
 ### Some additional notes on design choices:
-- I decided to keep the "conversation questions" between server and client on the server side. 
-Although it might have saved some computing power if I would have kept them mainly on the client side, I thought it would be more clear and readable if I keep it in this "conversation" style 
+- I decided to keep the "conversation questions" between server and client mainly on the server side. 
+Although it might have saved some computing power if I would have just printed some on the client side, I thought it would be more clear and readable if I keep it in this "conversation" style 
 
 - I defined the User and Attraction class in one file, because seperating them would have interfered with creating the many to many relationship between the Users attractions and the Attractions travller ids. 
 

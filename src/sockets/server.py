@@ -26,7 +26,10 @@ def handle_client(conn, addr): # delegates the conversation of clients
             name = conn.recv(4096)
             conn.send("please enter you new password: ".encode())
             password = conn.recv(4096)
-
+            # if no input:
+            if name.decode() == "-" or password.decode() == "-": 
+                conn.send("please enter a username and password".encode())
+                continue
             ### create a new user with type & password if not jet existing
             user = Agency.get_instance().create_user(name.decode(), type.decode().lower(), password.decode())
             if user is None:
@@ -43,6 +46,9 @@ def handle_client(conn, addr): # delegates the conversation of clients
             name = conn.recv(4096)
             conn.send("please enter your password: ".encode())
             password = conn.recv(4096)
+            if name.decode() == "-" or password.decode() == "-":
+                conn.send("please enter a username and password".encode())
+                continue
 
             # check if the user and password is existing
             user = Agency.get_instance().get_user(name.decode(), password.decode())
@@ -81,7 +87,7 @@ def handle_client(conn, addr): # delegates the conversation of clients
             # add a new attraction
             if decission.decode() == "1": 
                 conn.send("Name of the attraction: ".encode())
-                attraction = conn.recv(4096)
+                name = conn.recv(4096)
                 conn.send("Destination (e.g. Vienna): ".encode())
                 destination = conn.recv(4096)
                 conn.send("Type of the attraction (e.g. Restaurant): ".encode())
@@ -94,12 +100,19 @@ def handle_client(conn, addr): # delegates the conversation of clients
                 address = conn.recv(4096)
                 conn.send("Special offers: ".encode())
                 special_offer = conn.recv(4096)
+                
+                # check if name and destination were entered:
+                if name.decode() == "-" or destination.decode() == "-":
+                    conn.send("Please try again and don't forget to add at least a name and a destination!".encode())
+                    continue
+
                 # add the attraction
-                attraction = Agency.get_instance().add_attraction(attraction.decode(), destination.decode(), type.decode(), price.decode(), description.decode(), address.decode(), special_offer.decode())
+                attraction = Agency.get_instance().add_attraction(name.decode(), destination.decode(), type.decode(), price.decode(), description.decode(), address.decode(), special_offer.decode())
                 if attraction:
                     conn.send("Attraction added!".encode())
                 else:
-                    conn.send(attraction.encode()) # sends none if not added (attraction already exists)
+                    msg = f"A attraction with the name '{attraction.decode()}' already exists in {destination.decode()}!"
+                    conn.send(msg.encode())
          
 
             # remove attraction
@@ -108,9 +121,19 @@ def handle_client(conn, addr): # delegates the conversation of clients
                 name = conn.recv(4096)
                 conn.send("What is the destination of the attraction you would like to remove? ".encode())
                 destination = conn.recv(4096)
+                
+                #### not really needed as the user can only remove his own attractions
+                # check if the name and destination were entered
+                #if name.decode() == "-" or destination.decode() == "-":
+                 #   conn.send("Please try again and don't forget to add a name and a destination!".encode())
+                  #  continue
+
                 # remove the attraction
                 attraction = Agency.get_instance().remove_attraction(name.decode(), destination.decode())
-                conn.send(attraction.encode()) # sends the attraction (none if not found)            
+                if attraction:
+                    conn.send(attraction.encode())  # "Attraction not found!" or "Attraction belongs to another provider!"
+                else: # if the attraction was removed successfully
+                    conn.send("Attraction removed!".encode()) # sends none if removed           
 
             # update attraction
             elif decission.decode() == "3": 

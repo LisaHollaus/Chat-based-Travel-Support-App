@@ -22,13 +22,13 @@ while True:
     if msg.lower() == "yes": 
         s.send(msg.encode())  # send the "yes" to the server
         print(s.recv(4096).decode())  # "please enter your username: "
-        user = input(">>> ")  # input a username
-        s.send(user.encode())  
+        user = input(">>> ") or "-"  # input a username
+        s.send(user.encode()) # send the username to the server or "-" if no input
         print(s.recv(4096).decode())  # "please enter you new password: "
-        password = input(">>> ")  # input a password
+        password = input(">>> ") or "-"  # input a password
         s.send(password.encode()) 
         welcome = s.recv(4096)  # "welcome {username}!"
-        if welcome.decode() != "user already exists":
+        if welcome.decode() != "user already exists" and welcome.decode() != "please enter a username and password":
             print(welcome.decode())
             break
         print(welcome.decode()) # user already exists
@@ -36,16 +36,14 @@ while True:
     # if user already exists:
     elif msg.lower() == "no":
         s.send(msg.encode())  # send the "no" to the server
-        question = s.recv(4096)  # receive "please enter your username: "
-        print(question.decode())
-        user = input(">>> ")
+        print(s.recv(4096).decode()) # "please enter your username: "
+        user = input(">>> ") or "-"  # input a username
         s.send(user.encode())
-        question = s.recv(4096)
-        print(question.decode()) # receive "please enter your password: "
-        password = input(">>> ")
+        print(s.recv(4096).decode()) # "please enter your password: "
+        password = input(">>> ") or "-"  # input a password
         s.send(password.encode())
         welcome = s.recv(4096)
-        if welcome.decode() != "user not found":
+        if welcome.decode() != "user not found" and welcome.decode() != "please enter a username and password":
             print(welcome.decode())
             break
         print(welcome.decode()) # user not found
@@ -103,49 +101,49 @@ elif type.lower() == "provider":
 
         # add a new attraction
         if option == "1":
-            print("\nPlease fill out this form to add an attraction: \n Press space and enter to skip a question\n")
+            print("\nPlease fill out this form to add an attraction: ")
             print(s.recv(4096).decode()) # "Name of the attraction: "
-            name = input(">>> ") 
+            name = input(">>> ") or "-" 
             s.send(name.encode())
             print(s.recv(4096).decode()) # "Destination (e.g. Vienna): "
-            destination = input(">>> ")
+            destination = input(">>> ") or "-"
             s.send(destination.encode())
             print(s.recv(4096).decode()) # "Type of the attraction (e.g. Restaurant): "
-            type = input(">>> ")
+            type = input(">>> ") or "-"
             s.send(type.encode())
             print(s.recv(4096).decode()) # "Price range: "
-            price_range = input(">>> ")
+            price_range = input(">>> ") or "-"
             s.send(price_range.encode())
             print(s.recv(4096).decode()) # "Description of the attraction: "
-            description = input(">>> ")
+            description = input(">>> ") or "-"
             s.send(description.encode())
             print(s.recv(4096).decode()) # "Contact: "
-            contact = input(">>> ")
+            contact = input(">>> ") or "-"
             s.send(contact.encode())
             print(s.recv(4096).decode()) # "Special offer: "
-            special_offer = input(">>> ")
+            special_offer = input(">>> ") or "-"
             s.send(special_offer.encode())
 
-            # receive the confirmation
+            # receive the confirmation or missing data message
             confirmation = s.recv(4096)
-            if confirmation.decode():
-                print(f"{confirmation.decode()}\n") # "Attraction added!"
-            else:
-                print(f"A attraction with the name '{name}' already exists in {destination}!\n")
-
+            if confirmation.decode() == "Please try again and don't forget to add at least a name and a destination!":
+                print(confirmation.decode())
+                continue
+            print(confirmation.decode()) # "Attraction added!" or "A attraction with the name '{attraction}' already exists in {destination}!"
+            
         # remove an attraction
         elif option == "2":  
             print(s.recv(4096).decode()) # "What is the name of the attraction you would like to remove?"
-            name = input(">>> ")
+            name = input(">>> ") or "-"
             s.send(name.encode())
             print(s.recv(4096).decode()) # "What is the destination of the attraction you would like to remove?"
-            destination = input(">>> ")
+            destination = input(">>> ") or "-"
             s.send(destination.encode())
+
             confirmation = s.recv(4096)
-            if confirmation.decode():
-                print("Attraction removed!") 
-            else: 
-                print("Attraction not found!") 
+            print(confirmation.decode()) # "Attraction removed!", "Attraction not found!", "Attraction belongs to another provider!"
+            
+                
 
         # update an attraction
         elif option == "3":
