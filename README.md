@@ -22,17 +22,14 @@ A chat based Travel-Support-App
 
 ### Some additional notes on design choices:
 - I decided to keep the "conversation questions" between server and client mainly on the server side. 
-Although it might have saved some computing power if I would have just printed some on the client side, I thought it would be more clear and readable if I keep it in this "conversation" style 
+Although it might have saved some computing power in some cases if I would have just printed some on the client side, I thought it would be more clear and readable if I keep it in this "conversation" style 
 
 - I defined the User and Attraction class in one file, because seperating them would have interfered with creating the many to many relationship between the Users attractions and the Attractions travller ids. 
 
 
 
 # to do
-- switch remove and update order
-- settle on only asking questions from the server or keeping them in the client (explain decission in readme)
-- rename attraction.py to Tables or Database? 
-- figure out how to deal with null entries in client (try except?)
+- change to printing in client if possible and still time left, I'm sorry Lisa for the extra work :(
 
 
 

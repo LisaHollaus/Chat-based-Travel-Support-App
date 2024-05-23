@@ -131,8 +131,65 @@ elif type.lower() == "provider":
                 continue
             print(confirmation.decode()) # "Attraction added!" or "A attraction with the name '{attraction}' already exists in {destination}!"
             
+        
+        # view attractions
+        elif option == "2":
+            attractions = s.recv(4096)
+            for attraction in attractions.decode().split(","): # .split(",") converts the string back to a list
+                print(f"{attraction}")
+            
+            while True:
+                print("Would you like to see details of an attraction? (yes/no)")
+                answer = input(">>> ") or "-" 
+                s.send(answer.encode())
+
+                if answer.lower() == "yes":
+                    print("Please enter the name of the attraction you would like to see:")
+                    name = input(">>> ") or "-"
+                    s.send(name.encode())
+                    print("Please enter the destination of the attraction you would like to see:")
+                    destination = input(">>> ") or "-"
+                    s.send(destination.encode())
+                    print(s.recv(4096).decode()) # "Attraction not found!" or Attraction details
+                    break
+                
+                elif answer.lower() == "no":
+                    break 
+
+                print("please enter 'yes' or 'no'") 
+
+        # update an attraction
+        elif option == "3":
+            print(s.recv(4096).decode()) # "What is the name of the attraction you would like to update?"
+            name = input(">>> ") or "-"
+            s.send(name.encode())
+            print(s.recv(4096).decode()) # "What is the destination of the attraction you would like to update?"
+            destination = input(">>> ") or "-"
+            s.send(destination.encode())
+            confirmation = s.recv(4096)
+            if confirmation.decode() == "Attraction not found!" or confirmation.decode() == "Attraction belongs to another provider!":
+                print(confirmation.decode())
+                continue
+
+
+            print(confirmation.decode()) # "Your current contact information: {attraction.contact}\nPlease enter the new contact information or 'skip' for no change: "
+            new_contact = input(">>> ") or "-"
+            s.send(new_contact.encode())
+            print(s.recv(4096).decode()) # "Your current price range: {attraction.price_range}\nPlease enter the new price range or 'skip' for no change: "
+            new_price = input(">>> ") or "-"
+            s.send(new_price.encode())
+            print(s.recv(4096).decode()) # "Your current description: {attraction.description}\nPlease enter the new description or 'skip' for no change: "
+            new_description = input(">>> ") or "-"
+            s.send(new_description.encode())
+            print(s.recv(4096).decode()) # "Your current special offer: {attraction.special_offer}\nPlease enter the new special offer or 'skip' for no change: "
+            new_special_offer = input(">>> ") or "-"
+            s.send(new_special_offer.encode()) 
+            print(s.recv(4096).decode()) # "Attraction updated!" or "A attraction with the name {name} already at the destination {destination}!"
+            
+
+
         # remove an attraction
-        elif option == "2":  
+        elif option == "4":  
             print(s.recv(4096).decode()) # "What is the name of the attraction you would like to remove?"
             name = input(">>> ") or "-"
             s.send(name.encode())
@@ -143,57 +200,7 @@ elif type.lower() == "provider":
             confirmation = s.recv(4096)
             print(confirmation.decode()) # "Attraction removed!", "Attraction not found!", "Attraction belongs to another provider!"
             
-                
 
-        # update an attraction
-        elif option == "3":
-            print(s.recv(4096).decode()) # "What is the name of the attraction you would like to update?"
-            name = input(">>> ")
-            s.send(name.encode())
-            print(s.recv(4096).decode()) # "What is the destination of the attraction you would like to update?"
-            destination = input(">>> ")
-            s.send(destination.encode())
-            confirmation = s.recv(4096)
-            if confirmation.decode() == "Attraction not found!":
-                print(confirmation.decode())
-                continue
-            print(s.recv(4096).decode()) # "Your current contact information: {attraction.contact}\nPlease enter the new contact information or 'skip' for no change: "
-            new_contact = input(">>> ")
-            s.send(new_contact.encode())
-            print(s.recv(4096).decode()) # "Your current price range: {attraction.price_range}\nPlease enter the new price range or 'skip' for no change: "
-            new_price = input(">>> ")
-            s.send(new_price.encode())
-            print(s.recv(4096).decode()) # "Your current description: {attraction.description}\nPlease enter the new description or 'skip' for no change: "
-            new_description = input(">>> ")
-            s.send(new_description.encode())
-            print(s.recv(4096).decode()) # "Your current special offer: {attraction.special_offer}\nPlease enter the new special offer or 'skip' for no change: "
-            new_special_offer = input(">>> ")
-            s.send(new_special_offer.encode())
-            print(s.recv(4096).decode()) # "Attraction updated!"
-            
-        # view attractions
-        elif option == "4":
-            attractions = s.recv(4096)
-            for attraction in attractions.decode().split(","):
-                print(f"{attraction}")
-            print("Would you like to see details of one of your attractions? (yes/no)")
-            answer = input(">>> ")
-            s.send(answer.encode())
-            while True:
-                if answer.lower() == "yes":
-                    print("Please enter the name of the attraction you would like to see:")
-                    name = input(">>> ")
-                    s.send(name.encode())
-                    print("Please enter the destination of the attraction you would like to see:")
-                    destination = input(">>> ")
-                    s.send(destination.encode())
-                    print(s.recv(4096).decode()) # "Attraction not found!" or Attraction details
-                    break
-                
-                elif answer.lower() == "no":
-                    break 
-
-                print("please enter 'yes' or 'no'") 
 
         # logout
         elif option == "5": 

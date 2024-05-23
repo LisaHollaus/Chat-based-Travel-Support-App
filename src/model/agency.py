@@ -4,8 +4,7 @@ from sqlalchemy.orm import sessionmaker, relationship
 #from uuid import uuid1
 
 #from .user import *
-from .attraction import * # import the Attraction and User class and create the tables in the database
-
+from .tables import * # import the Attraction and User class and create the tables in the database if they don't exist
 
 
 class Agency(object):
@@ -88,11 +87,10 @@ class Agency(object):
 # provider functions:
 
     def get_options_provider(self):
-        return {1: "add attraction", 2: "remove attraction", 3: "update attraction", 4: "view attractions", 5: "logout"}
+        return {1: "add attraction", 2: "view attractions", 3: "update attraction", 4: "remove attraction", 5: "logout"}
     
-    def add_attraction(self, name, destination, attraction_type, price_range, description, contact, special_offer):
 
-        
+    def add_attraction(self, name, destination, attraction_type, price_range, description, contact, special_offer):
         session = self.start_session()
         existing_attraction = session.query(Attraction).filter(Attraction.name == name, Attraction.destination == destination).first()
         if existing_attraction: # check if the attraction already exists
@@ -123,25 +121,6 @@ class Agency(object):
 
         session.close()
         return attraction
-        
-    def remove_attraction(self, name, destination):
-        session = self.start_session()
-        attraction = session.query(Attraction).filter(Attraction.name == name, Attraction.destination == destination).first()
-
-        if attraction: # check if the attraction exists
-            if attraction.provider_id == self.loged_in_user_id: # check if it belongs to the provider
-                session.delete(attraction)
-                session.commit()
-                
-                attraction = session.query(Attraction).filter(Attraction.name == name, Attraction.destination == destination).first()
-                session.close()
-                return attraction # return None if the attraction was removed
-            else:
-                session.close()
-                return "Attraction belongs to another provider!"
-            
-        session.close()
-        return "Attraction not found!"
     
     def get_attraction(self, name, destination):
         session = self.start_session()
@@ -150,19 +129,64 @@ class Agency(object):
         if attraction:
             return attraction
         return "Attraction not found!"
+
+    def get_provider_id(self):
+        return self.loged_in_user_id
+
+    def update_attraction(self, attraction, name, destination, attraction_type, price_range, description, contact, special_offer):
+        session = self.start_session()
+        try:
+            attraction.name = name
+            attraction.destination = destination
+            attraction.attraction_type = attraction_type
+            attraction.price_range = price_range
+            attraction.description = description
+            attraction.contact = contact
+            attraction.special_offer = special_offer
+
+            session.commit()
+            session.close()
+            return "Attraction updated!"
+        except:
+            session.close()
+            return f"A attraction with the name {name} already at the destination {destination}!" # attraction was not updated
+       
+       
+
+        
+    def remove_attraction(self, attraction): 
+        session = self.start_session()
+
+        # check if the attraction belongs to the provider
+        if attraction.provider_id == self.loged_in_user_id: # check if it belongs to the provider
+            session.delete(attraction)
+            session.commit()
+                
+            attraction = session.refresh(attraction) # refresh the attraction to make sure it was removed
+            session.close()
+            return attraction # return None if the attraction was removed
+        
+        session.close()
+        return "Attraction belongs to another provider!"
+            
+        #session.close()
+        #return "Attraction not found!"
+    
     
     def get_attractions(self):
-        #session = self.start_session()
+        session = self.start_session()
         #attractions = session.query(Attraction).filter(Attraction in self.loged_in_user.attractions).all() # get all attractions from the provider
         #session.close()
         #attractions = sorted([attraction.name for attraction in attractions]) # get the names of the attractions
         
         ##### does this work? :
-        attractions = sorted([f"{attraction.name} in {attraction.destination}" for attraction in self.loged_in_user_id.attractions]) # get the names of the attractions
+        user = self.get_user_by_id(self.loged_in_user_id)
+        attractions = sorted([f"{attraction.name} in {attraction.destination}" for attraction in user.attractions]) # get the names of the attractions
+        session.close()
         return attractions
     
     def get_attraction_details(attraction):
-        return f"Name: {attraction.name}\nDestination: {attraction.destination}\nType: {attraction.attraction_type}\nPrice range: {attraction.price_range}\nDescription: {attraction.description}\nContact: {attraction.contact}\nSpecial offer: {attraction.special_offer}\n" 
+        return f"Name: {attraction.name}\nDestination: {attraction.destination}\nType: {attraction.attraction_type}\nPrice range: {attraction.price_range}\nDescription: {attraction.description}\nContact: {attraction.contact}\nSpecial offer: {attraction.special_offer}\n Rating: {attraction.rating}\nReviews: {attraction.reviews}" 
 
     
     
