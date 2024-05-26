@@ -11,7 +11,8 @@ s.listen()  # listen for incoming connections
 
 def handle_client(conn, addr): # delegates the conversation of clients
     print(f"new connection from {addr}")
-    conn.send("welcome to the App! \nAre you a traveller or a provider?".encode()) 
+    
+    # "welcome to the App! \nAre you a traveller or a provider?"
     type = conn.recv(4096)
     while type.decode().lower() != "provider" and type.decode().lower() != "traveller":
         type = conn.recv(4096)
@@ -22,15 +23,14 @@ def handle_client(conn, addr): # delegates the conversation of clients
         msg = conn.recv(4096) 
         # create a new user:
         if msg.decode().lower() == "yes": 
-            conn.send("please enter your new username: ".encode())
             name = conn.recv(4096)
-            conn.send("please enter you new password: ".encode())
             password = conn.recv(4096)
             # if no input:
             if name.decode() == "-" or password.decode() == "-": 
                 conn.send("please enter a username and password".encode())
                 continue
-            ### create a new user with type & password if not jet existing
+            
+            # create a new user with type & password if not jet existing
             user = Agency.get_instance().create_user(name.decode(), type.decode().lower(), password.decode())
             if user is None:
                 conn.send("user already exists".encode())
@@ -42,9 +42,7 @@ def handle_client(conn, addr): # delegates the conversation of clients
 
         # if user already exists: 
         elif msg.decode().lower() == "no": 
-            conn.send("please enter your username: ".encode())
             name = conn.recv(4096)
-            conn.send("please enter your password: ".encode())
             password = conn.recv(4096)
             if name.decode() == "-" or password.decode() == "-":
                 conn.send("please enter a username and password".encode())
@@ -86,19 +84,12 @@ def handle_client(conn, addr): # delegates the conversation of clients
 
             # add a new attraction
             if decission.decode() == "1": 
-                conn.send("Name of the attraction: ".encode())
                 name = conn.recv(4096)
-                conn.send("Destination (e.g. Vienna): ".encode())
                 destination = conn.recv(4096)
-                conn.send("Type of the attraction (e.g. Restaurant): ".encode())
                 type = conn.recv(4096)
-                conn.send("Price range: ".encode())
                 price = conn.recv(4096)
-                conn.send("Description of the attraction: ".encode())
                 description = conn.recv(4096)
-                conn.send("Contact information (e.g. addresse, email, website,..): ".encode())
                 address = conn.recv(4096)
-                conn.send("Special offers: ".encode())
                 special_offer = conn.recv(4096)
                 
                 # check if name and destination were entered:
@@ -120,19 +111,25 @@ def handle_client(conn, addr): # delegates the conversation of clients
                 attractions = Agency.get_instance().get_attractions()
                 attractions_str = ",".join(attractions) # convert the list to a string
                 conn.send(attractions_str.encode())
-                
+                # "Would you like to see details of any attraction? (yes/no)"
+                answer = conn.recv(4096).decode() 
+
                 while True:
-                    # "Would you like to see details of an attraction? (yes/no)"
-                    answer = conn.recv(4096).decode() 
                     if answer.lower() == "yes":
                         name = conn.recv(4096)
                         destination = conn.recv(4096)
                         attraction = Agency.get_instance().get_attraction(name.decode(), destination.decode())
                         if attraction == "Attraction not found!":
                             conn.send(attraction.encode())
-                        attraction_details = Agency.get_instance().get_attraction_details(attraction)
-                        conn.send(attraction_details.encode())
-                        break
+                        else: 
+                            attraction_details = Agency.get_instance().get_attraction_details(attraction) 
+                            conn.send(attraction_details.encode())
+                        
+                        # "Would you like to see details of another attraction? (yes/no)"
+                        answer = conn.recv(4096).decode()
+                        if answer.lower() == "no":
+                            break
+
                     elif answer.lower() == "no":
                         break
 
@@ -141,9 +138,9 @@ def handle_client(conn, addr): # delegates the conversation of clients
             # update attraction
             elif decission.decode() == "3": 
                 # get attraction
-                conn.send("What is the name of the attraction would you like to update? ".encode())
+                # "What is the name of the attraction would you like to update? "
                 name = conn.recv(4096)
-                conn.send("What is the destination of the attraction you would like to update? ".encode())
+                # "What is the destination of the attraction you would like to update? "
                 destination = conn.recv(4096)
                 attraction = Agency.get_instance().get_attraction(name.decode(), destination.decode())
                 
@@ -152,8 +149,8 @@ def handle_client(conn, addr): # delegates the conversation of clients
                     continue
                 
                 # provider can only update his own attractions
-                provier_id = Agency.get_instance().get_provider_id(attraction)
-                if provier_id != attraction.provider_id:
+                current_user_id = Agency.get_instance().get_id()
+                if current_user_id != attraction.provider_id:
                     conn.send("Attraction belongs to another provider!".encode())
                     continue
 
@@ -188,7 +185,6 @@ def handle_client(conn, addr): # delegates the conversation of clients
 
             # remove attraction
             elif decission.decode() == "4": 
-                conn.send("What is the name of the attraction would you like to remove? ".encode())
                 name = conn.recv(4096)
                 conn.send("What is the destination of the attraction you would like to remove? ".encode())
                 destination = conn.recv(4096)

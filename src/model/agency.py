@@ -60,8 +60,8 @@ class Agency(object):
     def get_user(self, name, password):
         session = self.start_session()
         user = session.query(User).filter(User.name == name, User.password == password).first() # get the user from the database .first() returns the first result or None
-        
-        self.loged_in_user_id = user.id
+        if user:
+            self.loged_in_user_id = user.id # set the loged in user
         session.close()
         return user
     
@@ -124,13 +124,13 @@ class Agency(object):
     
     def get_attraction(self, name, destination):
         session = self.start_session()
-        attraction = session.query(Attraction).filter(Attraction.name == name, Attraction.destination == destination).first()
+        attraction = session.query(Attraction).filter(Attraction.name == name, Attraction.destination == destination).first() # get the attraction from the database or None
         session.close()
         if attraction:
             return attraction
         return "Attraction not found!"
 
-    def get_provider_id(self):
+    def get_id(self):
         return self.loged_in_user_id
 
     def update_attraction(self, attraction, name, destination, attraction_type, price_range, description, contact, special_offer):
@@ -180,13 +180,14 @@ class Agency(object):
         #attractions = sorted([attraction.name for attraction in attractions]) # get the names of the attractions
         
         ##### does this work? :
-        user = self.get_user_by_id(self.loged_in_user_id)
+        user = session.query(User).get(self.loged_in_user_id)
+
         attractions = sorted([f"{attraction.name} in {attraction.destination}" for attraction in user.attractions]) # get the names of the attractions
         session.close()
         return attractions
     
-    def get_attraction_details(attraction):
-        return f"Name: {attraction.name}\nDestination: {attraction.destination}\nType: {attraction.attraction_type}\nPrice range: {attraction.price_range}\nDescription: {attraction.description}\nContact: {attraction.contact}\nSpecial offer: {attraction.special_offer}\n Rating: {attraction.rating}\nReviews: {attraction.reviews}" 
+    def get_attraction_details(self, attraction):
+        return f"\nName: {attraction.name}\nDestination: {attraction.destination}\nType: {attraction.attraction_type}\nPrice range: {attraction.price_range}\nDescription: {attraction.description}\nContact: {attraction.contact}\nSpecial offer: {attraction.special_offer}\n Rating: {attraction.rating}\nReviews: {attraction.reviews}" 
 
     
     
