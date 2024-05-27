@@ -133,26 +133,12 @@ class Agency(object):
     def get_id(self):
         return self.loged_in_user_id
 
-    def update_attraction(self, attraction, name, destination, attraction_type, price_range, description, contact, special_offer):
+    def update_attraction(self, updated_attraction):
         session = self.start_session()
-        try:
-            attraction.name = name
-            attraction.destination = destination
-            attraction.attraction_type = attraction_type
-            attraction.price_range = price_range
-            attraction.description = description
-            attraction.contact = contact
-            attraction.special_offer = special_offer
-
-            session.commit()
-            session.close()
-            return "Attraction updated!"
-        except:
-            session.close()
-            return f"A attraction with the name {name} already at the destination {destination}!" # attraction was not updated
-       
-       
-
+        session.merge(updated_attraction) # update the attraction
+        session.commit()
+        session.close()
+        return "Attraction updated!"
         
     def remove_attraction(self, attraction): 
         session = self.start_session()
@@ -162,27 +148,23 @@ class Agency(object):
             session.delete(attraction)
             session.commit()
                 
-            attraction = session.refresh(attraction) # refresh the attraction to make sure it was removed
+            attraction = session.query(Attraction).get(attraction.id)
             session.close()
             return attraction # return None if the attraction was removed
         
         session.close()
         return "Attraction belongs to another provider!"
             
-        #session.close()
-        #return "Attraction not found!"
     
     
     def get_attractions(self):
         session = self.start_session()
-        #attractions = session.query(Attraction).filter(Attraction in self.loged_in_user.attractions).all() # get all attractions from the provider
-        #session.close()
-        #attractions = sorted([attraction.name for attraction in attractions]) # get the names of the attractions
-        
-        ##### does this work? :
+       
         user = session.query(User).get(self.loged_in_user_id)
-
-        attractions = sorted([f"{attraction.name} in {attraction.destination}" for attraction in user.attractions]) # get the names of the attractions
+        if user.attractions:
+            attractions = sorted([f"{attraction.name} in {attraction.destination}" for attraction in user.attractions]) # get the names and their destination of the attractions
+        else: 
+            attractions = ["no attractions found!"] # return this in a list to be able to iterate over it
         session.close()
         return attractions
     

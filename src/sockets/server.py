@@ -64,6 +64,8 @@ def handle_client(conn, addr): # delegates the conversation of clients
     # while logged in as traveller:
     if type.decode() == "traveller":
         while True:
+
+
             destinations = Agency.get_instance().get_destinations()
             destinations_str = ",".join(destinations)  # convert the list to a string
             conn.send(destinations_str).encode()
@@ -73,7 +75,11 @@ def handle_client(conn, addr): # delegates the conversation of clients
             conn.send(options_str).encode()
     
 
-    # while logged in as provider:
+
+
+
+
+ # while logged in as provider:
     elif type.decode() == "provider":
         options = Agency.get_instance().get_options_provider()
         options_str = json.dumps(options)  # convert the dictionary to a JSON string
@@ -102,7 +108,7 @@ def handle_client(conn, addr): # delegates the conversation of clients
                 if attraction:
                     conn.send("Attraction added!".encode())
                 else:
-                    msg = f"A attraction with the name '{attraction.decode()}' already exists in {destination.decode()}!"
+                    msg = f"A attraction with the name '{name.decode()}' already exists in {destination.decode()}!"
                     conn.send(msg.encode())
             
             
@@ -155,45 +161,39 @@ def handle_client(conn, addr): # delegates the conversation of clients
                     continue
 
 
-                contact = f"Your current contact information: {attraction.contact}\nPlease enter the new contact information or 'skip' for no change: "
+                contact = f"Your current contact information: {attraction.contact}\nPlease enter the new contact information or press 'enter' for no change: "
                 conn.send(contact.encode())
+                #updated_attraction = attraction.copy()
                 new_contact = conn.recv(4096)
-                if new_contact.decode().lower() != "skip":
+                if new_contact.decode().lower() != "-":
                     attraction.contact = new_contact.decode()
 
-                price = f"Your current price range: {attraction.price_range}\nPlease enter the new price range or 'skip' for no change: "
+                price = f"Your current price range: {attraction.price_range}\nPlease enter the new price range or press 'enter' for no change: "
                 conn.send(price.encode())
                 new_price = conn.recv(4096)
-                if new_price.decode().lower() != "skip":
+                if new_price.decode().lower() != "-":
                     attraction.price_range = new_price.decode()
 
-                description = f"Your current description: {attraction.description}\nPlease enter the new description or 'skip' for no change: "
+                description = f"Your current description: {attraction.description}\nPlease enter the new description or press 'enter' for no change: "
                 conn.send(description.encode())
                 new_description = conn.recv(4096)
-                if new_description.decode().lower() != "skip":
+                if new_description.decode().lower() != "-":
                     attraction.description = new_description.decode()
 
-                special_offer = f"Your current special offer: {attraction.special_offer}\nPlease enter the new special offer or 'skip' for no change: "
+                special_offer = f"Your current special offer: {attraction.special_offer}\nPlease enter the new special offer or press 'enter' for no change: "
                 conn.send(special_offer.encode())
                 new_special_offer = conn.recv(4096)
-                if new_special_offer.decode().lower() != "skip":
+                if new_special_offer.decode().lower() != "-":
                     attraction.special_offer = new_special_offer.decode()
                 
                 update = Agency.get_instance().update_attraction(attraction)
-                conn.send(update.encode()) # "Attraction updated!" or "A attraction with the name {name} already at the destination {destination}!"
+                conn.send(update.encode()) # "Attraction updated!" 
 
 
             # remove attraction
             elif decission.decode() == "4": 
                 name = conn.recv(4096)
-                conn.send("What is the destination of the attraction you would like to remove? ".encode())
                 destination = conn.recv(4096)
-                
-                #### not really needed as the user can only remove his own attractions
-                # check if the name and destination were entered
-                #if name.decode() == "-" or destination.decode() == "-":
-                 #   conn.send("Please try again and don't forget to add a name and a destination!".encode())
-                  #  continue
                 
                 # check if the attraction exists 
                 attraction = Agency.get_instance().get_attraction(name.decode(), destination.decode())
@@ -205,17 +205,9 @@ def handle_client(conn, addr): # delegates the conversation of clients
                 # remove the attraction
                 conformation = Agency.get_instance().remove_attraction(attraction)
                 if conformation:
-                    conn.send(attraction.encode())  # "Attraction belongs to another provider!"
+                    conn.send(conformation.encode())  # "Attraction belongs to another provider!"
                 else: # if the attraction was removed successfully (conformation == None)
                     conn.send("Attraction removed!".encode()) # sends none if removed           
-
-
-            
-
-
-
-
-
 
 
 
