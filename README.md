@@ -12,12 +12,11 @@ A chat based Travel-Support-App
 3. simply follow the Steps in the terminal
 
 ### Changes from the initional proposal:
+Overall I made some slight changes to my initional proposal as I realised, that some ideas of mine weren't that practical and could be improved. For eample:
 - I used one User class for travellers and provideres instead of two, for better usability (espicially when handeling the Database).
 - I also omited the Destination Class and added it as a attribute of the Attraction class, as it makes the code less complicated, but achieves the same result.
+- I added the option to store a travellers faviourite attractions instead of the booking option, since the user(traveller) can get all necessary informations to book a trip by requesting the details of a attraction and some attractions (e.g.: Bars) might not offer booking options.
 - Instead of Subclasses (Bars, Tours, Restaurants and Hotels) for the Attractions, I used the attribute .attraction_type in the Attraction class. That way the Provider is able to add any kind of type, which will give more individual possibilites.
-
-
-- Storing all the Attractions in one table might not be the best solution when it comes to big data, but this was the best I could come up with in this limited time.
 
 
 ### Some additional notes on design choices:
@@ -27,7 +26,9 @@ A chat based Travel-Support-App
 
 
 # to do
-
+- add a favourites list to menu. Implement in the end of viewing an attraction "Would you like to add this Attraction to your faviourits list?". Make the relationship work
+- when leaving a review/rating the attraction gets added to visited attractions
+- extra menu point to show visited attractions
 
 
 

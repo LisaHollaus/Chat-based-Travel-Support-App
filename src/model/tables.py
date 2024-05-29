@@ -27,7 +27,9 @@ class User(Base):
     
     # Many-to-Many relationship with Attraction through secondary table
     visited_attractions = relationship("Attraction", secondary='attraction_traveller', back_populates="visitors")
-  
+    
+    # Many to One relationship with Attraction
+    favourite_attractions = relationship("Attraction", backref="attractions")
 
     def __init__(self):
         self.attractions = [] 

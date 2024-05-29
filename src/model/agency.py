@@ -1,3 +1,4 @@
+import random
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Float, select, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
@@ -65,21 +66,54 @@ class Agency(object):
         session.close()
         return user
     
+
+# traveller functions:
+
+    def get_options_traveller(self):
+        return {1: "explore attractions", 2: "get details of a specific attraction", 3: "rate visited attraction", 4: "logout"}
+
     def get_destinations(self):
         session = self.start_session()
         destinations = session.query(Attraction.destination).all() # get all destinations from the database as a list of tuples
         session.close()
+        # no if/else needed because there should always be destinations in the database
         destinations = sorted(list(set([destination[0] for destination in destinations]))) # remove duplicates and convert to a sorted list
-        return destinations
-
-
-### change:
-    def get_options_traveller(self, destination):
+        return destinations 
+    
+    def get_attractions_by_destination(self, destination):
         session = self.start_session()
-        attractions = session.query(Attraction).filter(Attraction.destination == destination).all()
+        if destination == "everywhere": # get a random attractions
+            destinations = session.query(Attraction.destination).distinct().all() # get all destinations from the database as a list of tuples without duplicates
+            destination = random.choice(destinations)[0] # get a random destination
+        attractions = session.query(Attraction).filter(Attraction.destination == destination).all() # get all attractions in the destination
         session.close()
-        attractions = sorted(list(set([attraction.attraction_type for attraction in attractions]))) # remove duplicates and convert to a sorted list 
+        if attractions:
+            attractions = sorted([f"{attraction.attraction_type}: {attraction.name}" for attraction in attractions]) 
+        else:
+            attractions = ["no attractions found!"]
         return attractions
+
+    def visit_attraction(self, attraction):
+        session = self.start_session()
+        user = session.query(User).get(self.loged_in_user_id)
+        user.visited_attractions.append(attraction)
+        session.commit()
+        session.close()
+        return "Attraction visited!"
+
+        
+   # def get_destinations(self):
+    #    session = self.start_session()
+     #   destinations = session.query(Attraction.destination).all() # get all destinations from the database as a list of tuples
+      #  session.close()
+       # destinations = sorted(list(set([destination[0] for destination in destinations]))) # remove duplicates and convert to a sorted list
+        #return destinations
+
+
+
+
+
+
 
 
 
@@ -169,7 +203,7 @@ class Agency(object):
         return attractions
     
     def get_attraction_details(self, attraction):
-        return f"\nName: {attraction.name}\nDestination: {attraction.destination}\nType: {attraction.attraction_type}\nPrice range: {attraction.price_range}\nDescription: {attraction.description}\nContact: {attraction.contact}\nSpecial offer: {attraction.special_offer}\n Rating: {attraction.rating}\nReviews: {attraction.reviews}" 
+        return f"\nName: {attraction.name}\nDestination: {attraction.destination}\nType: {attraction.attraction_type}\nPrice range: {attraction.price_range}\nDescription: {attraction.description}\nContact: {attraction.contact}\nSpecial offer: {attraction.special_offer}\n Rating: {attraction.rating} \nVisited by: {len(attraction.visitors)} travellers \nReviews: {attraction.reviews}\n" 
 
     
     

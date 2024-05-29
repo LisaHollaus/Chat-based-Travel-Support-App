@@ -58,30 +58,97 @@ while True:
 # while logged in as traveller:
 if type.lower() == "traveller":
     while True:
+        # listing the options of what to do:
+        options_str = s.recv(4096)  # receive the options
+        options = json.loads(options_str.decode()) # convert the json string to a dictionary
+        while True:    
+            print("\nWhat do you want to do now?")
+            for key, value in options.items():
+                print(f"{key}) {value}")
+            option = input("Enter the number\n>>> ") or "-"
+            s.send(option.encode())
+
+            # explore attractions
+            if option == "1":
+                destinations_str = s.recv(4096).decode()  # receive the destinations
+                print("\nWhere would you like to go?")
+                for destination in destinations_str.split(","): # convert string to a list and print the destinations
+                    print(f"{destination}")
+                
+                destination = input("Enter a destination or 'everywhere' for a random search \n>>> ") or "-"
+                s.send(destination.encode())
+                
+                attractions_str = s.recv(4096).decode()  # receive the attractions or "no attractions found!"
+                if attractions_str == "no attractions found!":
+                    print(attractions_str)
+                    continue
+                
+                print(f"Here's a list of all attractions in {destination}:")
+                for attraction in attractions_str.split(","):
+                    print(f"{attraction}")
+                
+                print("Would you like to see details of any of these attractions? (yes/no)")
+                answer = input(">>> ") or "-"
+                
+                while answer.lower() != "yes" and answer.lower() != "no":
+                    print("please enter 'yes' or 'no'")
+                    answer = input(">>> ") or "-"
+                s.send(answer.encode()) # send the answer to the server if it is "yes" or "no"
+                
+                while True:
+                    if answer.lower() == "yes":
+                        print("Please enter the name of the attraction you would like to see:")
+                        name = input(">>> ") or "-"
+                        s.send(name.encode())
+                        print(s.recv(4096).decode()) # "Attraction not found!" or Attraction details
+                        
+                        print("\nWould you like to see details of another attraction? (yes/no)")
+                        answer = input(">>> ") or "-" # set the answer to "-" if no input
+                        s.send(answer.encode())
+
+                        if answer.lower() == "no":
+                            break
+                    
+                    elif answer.lower() == "no":
+                        break 
+
+                print("Did you visited any of these attractions? (yes/no)")
+                answer = input(">>> ") or "-"
+                while answer.lower() != "yes" and answer.lower() != "no":
+                    print("please enter 'yes' or 'no'")
+                    answer = input(">>> ") or "-"
+                s.send(answer.encode()) # send the answer only if "yes" or "no"
+                if answer.lower() == "yes":
+                    print("Please enter the name of the attraction you have visited:")
+                    name = input(">>> ") or "-"
+                    s.send(name.encode())
+                    print(s.recv(4096).decode()) # "Attraction not found!" or "Attraction added to your visited attractions!"
+        ####################
+
+                elif answer.lower() == "no":
+                    break
+
+
+
+        # destinations = s.recv(4096).decode()  # receive the destinations
+        # print("Where would you like to go?")
+        # for destination in destinations.split(","): # .split(",") converts the string to a list
+        #     print(f"{destination}\n")
+        # destination = input(">>> ")
+        # s.send(destination.encode())
         
-        ##### listing the options of what to do:
-
-
-
-        destinations = s.recv(4096)  # receive the destinations
-        print("Where would you like to go?")
-        for destination in destinations.decode().split(","): # .split(",") converts the string to a list
-            print(f"{destination}\n")
-        destination = input(">>> ")
-        s.send(destination.encode())
-        
 
 
 
 
 
-        # listing the options
-        options = s.recv(4096)
-        print("What are you looking for?")
-        for option in options.decode().split(","): # "bars, restaurants, tours, hotels"
-            print(f"{option}s\n")
-        option = input(">>> ")
-        s.send(option.encode())
+        # # listing the options
+        # options = s.recv(4096)
+        # print("What are you looking for?")
+        # for option in options.decode().split(","): # "bars, restaurants, tours, hotels"
+        #     print(f"{option}s")
+        # option = input(">>> ")
+        # s.send(option.encode())
 
         # listing the specific attractions 
         #attractions = s.recv(4096)
@@ -96,7 +163,7 @@ elif type.lower() == "provider":
         print("\nWhat do you want to do now?")
         for key, value in options.items():
             print(f"{key}) {value}")
-        option = input("Enter the number\n>>> ")
+        option = input("Enter the number\n>>> ") or "-"
         s.send(option.encode())
 
         # add a new attraction
