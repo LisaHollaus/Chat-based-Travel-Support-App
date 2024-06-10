@@ -59,172 +59,144 @@ def start_client():
 
     # while logged in as traveller:
     if type.lower() == "traveller":
-        while True:
-            # listing the options of what to do:
-            options_str = s.recv(4096).decode()  # receive the options
         
-            while True:   
-                option = print_menu_get_answer(options_str)
-                s.send(option.encode())
+        options_str = s.recv(4096).decode()  # receive the options
 
-                # explore attractions
-                if option == "1":
-                    # find destination
-                    destinations_str = s.recv(4096).decode()  # receive the destinations
-                    print("Where would you like to go?")
-                    print_list(destinations_str)
-                    # for destination in destinations_str.split(","): # convert string to a list and print the destinations
-                    #     print(f"{destination}")
+        while True:
+        # listing the decissions of what to do:
+            decission = print_menu_get_answer(options_str) # get the user's decission
+            s.send(decission.encode())
+
+            # explore attractions
+            if decission == "1":
+                # find destination
+                destinations_str = s.recv(4096).decode()  # receive the destinations
+                print("Where would you like to go?")
+                print_list(destinations_str) # converts string to a list and print the destinations
                     
-                    destination = input("Enter a destination or 'everywhere' for a random search \n>>> ") or "-"
-                    s.send(destination.encode())
+                destination = input("Enter a destination or 'everywhere' for a random search \n>>> ") or "-"
+                s.send(destination.encode())
                     
-                    # see attractions
-                    attractions_str = s.recv(4096).decode()  # receive the attractions or "no attractions found!"
-                    if attractions_str == "no attractions found!":
-                        print(attractions_str)
-                        continue
+                # see attractions
+                attractions_str = s.recv(4096).decode()  # receive the attractions or "no attractions found!"
+                if attractions_str == "No attractions found!":
+                    print(attractions_str)
+                    continue
+                  
+                # "Here's a list of all attractions in {destination}:"
+                print_list(attractions_str) # converts string to a list and print the attractions or "No attractions found!"
+                  
                     
-                    #print(f"Here's a list of all attractions in {destination}:")
-                    print_list(attractions_str) # converts string to a list and print the attractions
-                    # for attraction in attractions_str.split(","):
-                    #     print(f"{attraction}")
+                # see details of the attractions
+                print("\nWould you like to see details of any of these attractions? (yes/no)")
+                answer = yes_no_loop() # make sure the user enters "yes" or "no"
                     
-                    # see details
-                    print("\nWould you like to see details of any of these attractions? (yes/no)")
-                    answer = yes_no_loop() # make sure the user enters "yes" or "no"
+                s.send(answer.encode()) # send the answer to the server if it is "yes" or "no"
                     
-                    s.send(answer.encode()) # send the answer to the server if it is "yes" or "no"
-                    
-                    if answer.lower() == "yes":
-                       #  get_attraction_details_loop(s, traveller=True) # we don't use this function here because we don't need to ask for the destination as well
-                        while True:
-                            if answer.lower() == "yes":
-                                print("Please enter the name of the attraction you would like to see:")
-                                name = input(">>> ") or "-"
-                                s.send(name.encode())
-                                answer = s.recv(4096).decode() # "Attraction not found!" or Attraction details
-                                print(answer) # "Attraction not found!" or Attraction details
+                if answer.lower() == "yes":
+                    #  get_attraction_details_loop(s, traveller=True) # we don't use this function here because we don't need to ask for the destination as well
+                    while True:    
+                        print("Please enter the name of the attraction you would like to see:")
+                        name = input(">>> ") or "-"
+                        s.send(name.encode())
+                        answer = s.recv(4096).decode() # "Attraction not found!" or Attraction details
+                        print(answer) # "Attraction not found!" or Attraction details
                             
 
-                             # add attraction to faviorites list if found
-                            if answer != "Attraction not found!":
-                                print("Would you like to add this attraction to your favorites list? (yes/no)")
-                                faviorite = yes_no_loop()
-                                s.send(faviorite.encode())
-                                print(s.recv(4096).decode()) # "Attraction added to your favorites!" or "Attraction already in favourites!" or "\n"
+                        # add attraction to faviorites list if found
+                        if answer != "Attraction not found!":
+                            print("Would you like to add this attraction to your favorites list? (yes/no)")
+                            faviorite = yes_no_loop()
+                            s.send(faviorite.encode())
+                            print(s.recv(4096).decode()) # "Attraction added to your favorites!" or "Attraction already in favourites!" or ""
                                 
-                             # see details of another attraction
-                            print("\nWould you like to see details of another attraction? (yes/no)")
-                            answer = yes_no_loop()
-                            s.send(answer.encode())
+                        # see details of another attraction
+                        print("\nWould you like to see details of another attraction? (yes/no)")
+                        answer = yes_no_loop()
+                        s.send(answer.encode())
 
-                            if answer.lower() == "no":
-                                break
+                        if answer.lower() == "no":
+                            break
                         
                 
-                # get details of a specific attraction
-                elif option == "2":
-                    get_attraction_details_loop(s, traveller=True) # get details of a specific attraction (see clienthelper.py for the function)
-                    # while True:
-                    #     print("Please enter the name of the attraction you would like to see:")
-                    #     name = input(">>> ") or "-"
-                    #     s.send(name.encode())
-                    #     print("Please enter the destination of the attraction you would like to see:")
-                    #     destination = input(">>> ") or "-"
-                    #     s.send(destination.encode())
-                    #     print(s.recv(4096).decode()) # "Attraction not found!" or Attraction details
-
-                    #     # add attraction to faviorites list if found
-                    #     if answer != "Attraction not found!":
-                    #         print("Would you like to add this attraction to your favorites list? (yes/no)")
-                    #         faviorite = yes_no_loop()
-                    #         s.send(faviorite.encode())
-                    #         print(s.recv(4096).decode()) # "Attraction added to your favorites!" or "Attraction already in favourites!" or "\n"
-
+            # get details of a specific attraction
+            elif decission == "2":
+                get_attraction_details_loop(s, traveller=True) # get details of a specific attraction (see clienthelper.py for the function)
                     
-                    #     # see details of another attraction
-                    #     print("\nWould you like to see details of another attraction? (yes/no)")
-                    #     answer = yes_no_loop()
-                        
-                    #     s.send(answer.encode())
-                    #     if answer.lower() == "no":
-                    #         break         
-
                 
-                # see favorite attractions
-                elif option == "3":
-                    attractions = s.recv(4096).decode()
-                    print("Your favorite attractions:")
-                    print_list(attractions) # print the favorite attractions
+            # see favorite attractions
+            elif decission == "3":
+                attractions = s.recv(4096).decode()
+                print("Your favorite attractions:")
+                print_list(attractions) # print the favorite attractions
 
-                    # see details
-                    print("Would you like to see details of any attractions? (yes/no)")
-                    answer = yes_no_loop() # make sure the user enters "yes" or "no"
+                # see details
+                print("Would you like to see details of any attractions? (yes/no)")
+                answer = yes_no_loop() # make sure the user enters "yes" or "no"
                     
-                    s.send(answer.encode()) # send the answer to the server if it is "yes" or "no"
+                s.send(answer.encode()) # send the answer to the server if it is "yes" or "no"
                     
-                    if answer.lower() == "yes":
-                        get_attraction_details_loop(s, traveller=True) 
+                if answer.lower() == "yes":
+                    get_attraction_details_loop(s, traveller=True) 
 
 
-                # rate an attraction
-                elif option == "4":
-                    print("Please enter the name of the attraction you would like to rate:")
-                    name = input(">>> ") or "-"
-                    s.send(name.encode())
-                    print("Please enter the destination of the attraction you would like to rate:")
-                    destination = input(">>> ") or "-"
-                    s.send(destination.encode())
+            # rate an attraction
+            elif decission == "4":
+                print("Please enter the name of the attraction you would like to rate:")
+                name = input(">>> ") or "-"
+                s.send(name.encode())
+                print("Please enter the destination of the attraction you would like to rate:")
+                destination = input(">>> ") or "-"
+                s.send(destination.encode())
                     
-                    # check if the attraction exists or is already rated
-                    found = s.recv(4096).decode() 
-                    if found != "Attraction found":
-                        print(found) # "Attraction not found!" or "Attraction already rated!"
-                        continue
+                # check if the attraction exists or is already rated
+                found = s.recv(4096).decode() 
+                if found != "Attraction found":
+                    print(found) # "Attraction not found!" or "Attraction already rated!"
+                    continue
 
-                    # get the rating from the user
-                    print("Please enter your rating (0-5):")
+                # get the rating from the user
+                print("Please enter your rating (0-5):")
+                rating = input(">>> ") or "-"
+                while not rating.isnumeric() or float(rating) < 0 or float(rating) > 5:
+                    print("Please enter a number between 0 and 5")
                     rating = input(">>> ") or "-"
-                    while not rating.isnumeric() or float(rating) < 0 or float(rating) > 5:
-                        print("Please enter a number between 0 and 5")
-                        rating = input(">>> ") or "-"
-                    s.send(rating.encode())
-                    print(s.recv(4096).decode()) # "Attraction rated! Thank you for your feedback!"
+                s.send(rating.encode())
+                print(s.recv(4096).decode()) # "Attraction rated! Thank you for your feedback!"
                     
-                # history of visited attractions
-                elif option == "5":
-                    print("Your visited attractions:")
-                    visited = s.recv(4096).decode()
-                    print_list(visited) # print the visited attractions
+            # history of visited attractions
+            elif decission == "5":
+                print("Your visited attractions:")
+                visited = s.recv(4096).decode()
+                print_list(visited) # print the visited attractions
 
-                    # see details
-                    print("Would you like to see details of any attractions? (yes/no)")
-                    answer = yes_no_loop() # make sure the user enters "yes" or "no"
-                    if answer.lower() == "yes":
-                        get_attraction_details_loop(s, traveller=True)
+                # see details
+                print("Would you like to see details of any attractions? (yes/no)")
+                answer = yes_no_loop() # make sure the user enters "yes" or "no"
+                if answer.lower() == "yes":
+                    get_attraction_details_loop(s, traveller=True)
 
-                # logout
-                elif option == "6":
-                    break     
+            # logout
+            elif decission == "6":
+                break     
 
 
 
     # while logged in as provider:
     elif type.lower() == "provider":
-        options_str = s.recv(4096).decode()  # receive the options
-        #options = json.loads(options_str.decode()) # convert the json string to a dictionary
+        decissions_str = s.recv(4096).decode()  # receive the decissions
+        #decissions = json.loads(decissions_str.decode()) # convert the json string to a dictionary
         while True:    
             #print("\nWhat do you want to do now?")
-            #for key, value in options.items():
+            #for key, value in decissions.items():
             #   print(f"{key}) {value}")
-            #option = input("Enter the number\n>>> ") or "-"
-            option = print_menu_get_answer(options_str)
-            s.send(option.encode())
+            #decission = input("Enter the number\n>>> ") or "-"
+            decission = print_menu_get_answer(decissions_str)
+            s.send(decission.encode())
 
             # add a new attraction
-            if option == "1":
-                print("\nPlease fill out this form to add an attraction: \nName of the attraction: ")
+            if decission == "1":
+                print("Please fill out this form to add an attraction: \nName of the attraction: ")
                 name = input(">>> ") or "-" 
                 s.send(name.encode())
                 print("Destination (e.g. Vienna): ")
@@ -255,53 +227,25 @@ def start_client():
                 
             
             # view attractions
-            elif option == "2":
-                attractions = "\nYour attractions:\n" + s.recv(4096).decode() # receive the attractions as a string
+            elif decission == "2":
+                attractions = "Your attractions:\n" + s.recv(4096).decode() # receive the attractions as a string
                 print_list(attractions) # print the attractions
                 #for attraction in attractions.split(","): # .split(",") converts the string back to a list
                 #   print(f"{attraction}")
                 
                 
                 print("Would you like to see details of any attraction? (yes/no)")
-                #answer = input(">>> ") or "-" 
                 answer = yes_no_loop()
+                s.send(answer.encode())
                 
                 if answer.lower() == "yes":
                     get_attraction_details_loop(s) # get details of a specific attraction (see clienthelper.py for the function)
                
-                # while True:
-                #     # while answer.lower() != "yes" and answer.lower() != "no":
-                #     #     print("please enter 'yes' or 'no'")
-                #     #     answer = input(">>> ") or "-"
-                        
-                #     s.send(answer.encode()) # send the answer to the server if it is "yes" or "no"
-
-
-                #     if answer.lower() == "yes":
-                #         print("Please enter the name of the attraction you would like to see:")
-                #         name = input(">>> ") or "-"
-                #         s.send(name.encode())
-                #         print("Please enter the destination of the attraction you would like to see:")
-                #         destination = input(">>> ") or "-"
-                #         s.send(destination.encode())
-                #         print(s.recv(4096).decode()) # "Attraction not found!" or Attraction details
-                        
-                #         print("\nWould you like to see details of another attraction? (yes/no)")
-                #         #answer = input(">>> ") or "-" # set the answer to "-" if no input
-                #         answer = yes_no_loop()
-                #         s.send(answer.encode())
-
-                #         if answer.lower() == "no":
-                #             break
-                    
-                #     elif answer.lower() == "no":
-                #         break 
-
-                #     #print("please enter 'yes' or 'no'") 
+            
 
             # update an attraction
-            elif option == "3":
-                print("\nWhat is the name of the attraction you would like to update?")
+            elif decission == "3":
+                print("What is the name of the attraction you would like to update?")
                 name = input(">>> ") or "-"
                 s.send(name.encode())
                 print("What is the destination of the attraction you would like to update?")
@@ -330,8 +274,8 @@ def start_client():
 
 
             # remove an attraction
-            elif option == "4":  
-                print("\nWhat is the name of the attraction you would like to remove?")
+            elif decission == "4":  
+                print("What is the name of the attraction you would like to remove?")
                 name = input(">>> ") or "-"
                 s.send(name.encode())
                 print("What is the destination of the attraction you would like to remove?")
@@ -343,14 +287,14 @@ def start_client():
 
 
             # logout
-            elif option == "5": 
+            elif decission == "5": 
                 break
             
             
             #print("\nplease enter a number\n")
 
 
-    print(f"\nGoodbye {user}!")
+    print(f"Goodbye {user}!")
     s.close()  # close the connection
 
 

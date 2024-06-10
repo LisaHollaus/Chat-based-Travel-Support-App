@@ -15,9 +15,9 @@ def handle_client(conn, addr): # delegates the conversation of clients
     print(f"new connection from {addr}")
     
     # "welcome to the App! \nAre you a traveller or a provider?"
-    type = conn.recv(4096).decode()
-    while type.lower() != "provider" and type.lower() != "traveller":
-        type = conn.recv(4096).decode()
+    type = conn.recv(4096).decode().lower()
+    while type != "provider" and type != "traveller":
+        type = conn.recv(4096).decode().lower()
     
 
     # login or register
@@ -65,128 +65,109 @@ def handle_client(conn, addr): # delegates the conversation of clients
 
     # while logged in as traveller:
     if type == "traveller":
-        while True:
-            # get the options for the traveller
-            options = Agency.get_instance().get_options_traveller()
-            options_str = json.dumps(options)  # convert the dictionary to a JSON string
-            conn.send(options_str.encode())
-
-            while True:
-                decission = conn.recv(4096).decode()
-
-                # get destinations
-                if decission == "1": 
-                    destinations_str = Agency.get_instance().get_destinations()
-                    #destinations_str = ",".join(destinations)
-                    
-                    conn.send(destinations_str.encode())
-                    destination = conn.recv(4096).decode()
-
-                    # get all attractions of the desired destination
-                    attractions_str = Agency.get_instance().get_attractions_by_destination(destination)
-                    #attractions_str = ",".join(attractions)  # convert the list to a string and add it to the message 
-                    conn.send(attractions_str.encode())
-
-                    # "Would you like to see details of any attraction? (yes/no)"
-                    answer = conn.recv(4096).decode()
-                    if answer.lower() == "yes":
-                        #view_attraction_details_loop(traveller=True) # we don't use this function here because we don't need to ask for the destination as well
-                        while True:
-                            name = conn.recv(4096).decode()
         
-                            attraction = Agency.get_instance().get_attraction(name, destination)
-                            if attraction == "Attraction not found!":
-                                conn.send(attraction.encode())
-                            else: 
-                                attraction_details = Agency.get_instance().get_attraction_details(attraction) 
-                                conn.send(attraction_details.encode())
-                                favourite = conn.recv(4096).decode() # "Would you like to add this attraction to your favourites? (yes/no)"
-                                if favourite.lower() == "yes":
-                                    added = Agency.get_instance().add_to_favourites(attraction)
-                                    conn.send(added.encode()) # "Attraction added to favourites!" or "Attraction already in favourites!"
-                                else:
-                                    conn.send("\n".encode())
+        # get the options for the traveller
+        options = Agency.get_instance().get_options_traveller()
+        options_str = json.dumps(options)  # convert the dictionary to a JSON string
+        conn.send(options_str.encode())
+
+        while True:
+            decission = conn.recv(4096).decode()
+
+            # get destinations
+            if decission == "1": 
+                # get all destinations
+                destinations_str = Agency.get_instance().get_destinations()
+                conn.send(destinations_str.encode())
+                destination = conn.recv(4096).decode()
+
+                # get all attractions of the desired destination
+                attractions_str = Agency.get_instance().get_attractions_by_destination(destination)
+                conn.send(attractions_str.encode()) # "No attractions found!" or list of attractions as a string separated by commas
+                if attractions_str == "No attractions found!":
+                    continue
+
+                # "Would you like to see details of any of these attractions? (yes/no)"
+                answer = conn.recv(4096).decode()
+                if answer.lower() == "yes":
+                    #view_attraction_details_loop(traveller=True, conn) # we don't use this function here because we don't need to ask for the destination as well
+                    while True:
+                        name = conn.recv(4096).decode()
+        
+                        attraction = Agency.get_instance().get_attraction(name, destination)
+                        if attraction == "Attraction not found!":
+                            conn.send(attraction.encode())
+                        else: 
+                            attraction_details = Agency.get_instance().get_attraction_details(attraction) 
+                            conn.send(attraction_details.encode())
+                            favourite = conn.recv(4096).decode() # "Would you like to add this attraction to your favourites? (yes/no)"
+                            if favourite.lower() == "yes":
+                                added = Agency.get_instance().add_to_favourites(attraction)
+                                conn.send(added.encode()) # "Attraction added to favourites!" or "Attraction already in favourites!"
+                            else:
+                                conn.send(" ".encode())
                             
-                            # "Would you like to see details of another attraction? (yes/no)"
-                            answer = conn.recv(4096).decode()
-                            if answer.lower() == "no":
-                                break
+                        # "Would you like to see details of another attraction? (yes/no)"
+                        answer = conn.recv(4096).decode()
+                        if answer.lower() == "no":
+                            break
 
                 
               
 
                 
-                # get details of a specific attraction
-                elif decission == "2":
-                    view_attraction_details_loop(traveller=True)
-                    # while True:
-                    #     name = conn.recv(4096).decode()
-                    #     destination = conn.recv(4096).decode()
-                    #     attraction = Agency.get_instance().get_attraction(name, destination)
-                    #     if attraction == "Attraction not found!":
-                    #         conn.send(attraction.encode())
-                    #     else: 
-                    #         attraction_details = Agency.get_instance().get_attraction_details(attraction) 
-                    #         conn.send(attraction_details.encode())
-                    #         favourite = conn.recv(4096).decode() # "Would you like to add this attraction to your favourites? (yes/no)"
-                    #         if favourite.lower() == "yes":
-                    #             added = Agency.get_instance().add_to_favourites(attraction)
-                    #             conn.send(added.encode()) # "Attraction added to favourites!" or "Attraction already in favourites!"
-                    #         else:
-                    #             conn.send("\n".encode())
-                            
-                    #     # "Would you like to see details of another attraction? (yes/no)"
-                    #     answer = conn.recv(4096).decode()
-                    #     if answer.lower() == "no":
-                    #         break
-        
-                # see favorite attractions
-                elif decission == "3":
-                    favourites = Agency.get_instance().get_favourites()
-                    favourites_str = ",".join(favourites)
-                    conn.send(favourites_str.encode())
-                    # "Would you like to see details of any attraction? (yes/no)"
-                    answer = conn.recv(4096).decode()
-                    if answer.lower() == "yes":
-                        view_attraction_details_loop(traveller=True)
-
-                # rate an attraction
-                elif decission == "4":
-                    name = conn.recv(4096).decode()
-                    destination = conn.recv(4096).decode()
-
-                    attraction = Agency.get_instance().get_attraction(name, destination)
-                    if attraction == "Attraction not found!":
-                        conn.send(f"Attraction {name} in {destination} not found!".encode())
-                        continue
+            # get details of a specific attraction
+            elif decission == "2":
+                Agency.get_instance().view_attraction_details_loop(conn, traveller=True)
+    
                     
-                    check = Agency.get_instance().check_if_rated(attraction)
-                    if check: # true if the attraction was already rated (in visited attractions)
-                        conn.send("You already rated this attraction!".encode())
-                        continue
-                    else: 
-                        conn.send("Attraction found".encode())
+            # see favorite attractions
+            elif decission == "3":
+                favourites = Agency.get_instance().get_favourites()
+                favourites_str = ",".join(favourites)
+                conn.send(favourites_str.encode())
+                # "Would you like to see details of any attraction? (yes/no)"
+                answer = conn.recv(4096).decode()
+                if answer.lower() == "yes":
+                    Agency.get_instance().view_attraction_details_loop(conn, traveller=True)
 
-                    # get rating and review
-                    rating = conn.recv(4096).decode()
-                    rated = Agency.get_instance().rate_attraction(attraction, rating)
-                    conn.send(rated.encode()) # "Attraction rated! Thank you for your feedback!"	
+            # rate an attraction
+            elif decission == "4":
+                name = conn.recv(4096).decode()
+                destination = conn.recv(4096).decode()
+
+                attraction = Agency.get_instance().get_attraction(name, destination)
+                if attraction == "Attraction not found!":
+                    conn.send(f"Attraction {name} in {destination} not found!".encode())
+                    continue
+                    
+                check = Agency.get_instance().check_if_rated(attraction)
+                if check: # true if the attraction was already rated (in visited attractions)
+                    conn.send("You already rated this attraction!".encode())
+                    continue
+                else: 
+                    conn.send("Attraction found".encode())
+
+                # get rating and review
+                rating = conn.recv(4096).decode()
+                rated = Agency.get_instance().rate_attraction(attraction, rating)
+                conn.send(rated.encode()) # "Attraction rated! Thank you for your feedback!"	
 
 
-                # history of visited attractions
-                elif decission == "5":
-                    visited = Agency.get_instance().get_visited_attractions()
-                    visited_str = ",".join(visited)
-                    conn.send(visited_str.encode())
+            # history of visited attractions
+            elif decission == "5":
+                visited = Agency.get_instance().get_visited_attractions()
+                visited_str = ",".join(visited)
+                conn.send(visited_str.encode())
 
-                    # "Would you like to see details of any attraction? (yes/no)"
-                    answer = conn.recv(4096).decode()
-                    if answer.lower() == "yes":
-                        view_attraction_details_loop(traveller=True)
+                # "Would you like to see details of any attraction? (yes/no)"
+                answer = conn.recv(4096).decode()
+                if answer.lower() == "yes":
+                    Agency.get_instance().view_attraction_details_loop(conn, traveller=True)
 
-                # logout
-                elif decission == "6":
-                    break
+            # logout
+            elif decission == "6":
+                break
 
 
 
@@ -232,33 +213,16 @@ def handle_client(conn, addr): # delegates the conversation of clients
             
             # view attractions
             elif decission == "2": 
-                attractions = Agency.get_instance().get_attractions()
-                attractions_str = ",".join(attractions) # convert the list to a string
+                attractions_str = Agency.get_instance().get_attractions()
+                #attractions_str = ",".join(attractions) # convert the list to a string
                 conn.send(attractions_str.encode())
                 
                 # "Would you like to see details of any attraction? (yes/no)"
                 answer = conn.recv(4096).decode() 
                 if answer.lower() == "yes":
-                    view_attraction_details_loop() # get attraction details of one or more attractions and print them
+                    Agency.get_instance().view_attraction_details_loop(conn) # get attraction details of one or more attractions and print them
 
-                # while True:
-                #     if answer.lower() == "yes":
-                #         name = conn.recv(4096)
-                #         destination = conn.recv(4096)
-                #         attraction = Agency.get_instance().get_attraction(name.decode(), destination.decode())
-                #         if attraction == "Attraction not found!":
-                #             conn.send(attraction.encode())
-                #         else: 
-                #             attraction_details = Agency.get_instance().get_attraction_details(attraction) 
-                #             conn.send(attraction_details.encode())
-                        
-                #         # "Would you like to see details of another attraction? (yes/no)"
-                #         answer = conn.recv(4096).decode()
-                #         if answer.lower() == "no":
-                #             break
-
-                #     elif answer.lower() == "no":
-                #         break
+                
 
 
             
@@ -338,49 +302,6 @@ def handle_client(conn, addr): # delegates the conversation of clients
     
     # conn.close()  # leaving the conversation open for other clients to connect
 
-
-# def view_attraction_details_loop():
-#     while True:
-#         #if answer.lower() == "yes":
-#         name = conn.recv(4096)
-#         destination = conn.recv(4096)
-#         attraction = Agency.get_instance().get_attraction(name.decode(), destination.decode())
-#         if attraction == "Attraction not found!":
-#             conn.send(attraction.encode())
-#         else: 
-#             attraction_details = Agency.get_instance().get_attraction_details(attraction) 
-#             conn.send(attraction_details.encode())
-                        
-#         # "Would you like to see details of another attraction? (yes/no)"
-#         answer = conn.recv(4096).decode()
-#         if answer.lower() == "no":
-#             break
-
-
-
-def view_attraction_details_loop(traveller = False): # traveller is an optional parameter to give the traveller the option to add the attraction to the faviorites list
-    while True:
-        name = conn.recv(4096).decode()
-        destination = conn.recv(4096).decode()
-        attraction = Agency.get_instance().get_attraction(name, destination)
-        if attraction == "Attraction not found!":
-            conn.send(attraction.encode())
-        else: 
-            attraction_details = Agency.get_instance().get_attraction_details(attraction) 
-            conn.send(attraction_details.encode())
-            if traveller: # if the user is a traveller
-                favourite = conn.recv(4096).decode() # "Would you like to add this attraction to your favourites? (yes/no)"
-                if favourite.lower() == "yes":
-                    added = Agency.get_instance().add_to_favourites(attraction)
-                    conn.send(added.encode()) # "Attraction added to favourites!" or "Attraction already in favourites!"
-                else:
-                    conn.send(" ".encode()) # send a blank message to keep the conversation going
-                            
-        # "Would you like to see details of another attraction? (yes/no)"
-        answer = conn.recv(4096).decode()
-        if answer.lower() == "no":
-            break
-            
 
 if __name__ == "__main__":
     s = start_server()

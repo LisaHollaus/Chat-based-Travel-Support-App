@@ -18,6 +18,9 @@ def print_menu_get_answer(options_str):
         print(f"{key}) {value}")
 
     option = input("Enter the number\n>>> ") or "-"
+    while option not in options.keys():
+        print("Please enter a valid number")
+        option = input("Enter the number\n>>> ") or "-"
     print("\n") # print a new line for better readability
     return option
 

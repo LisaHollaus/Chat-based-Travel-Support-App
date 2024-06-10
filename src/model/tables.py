@@ -1,35 +1,26 @@
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Float, select, ForeignKey, UUID
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Float, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
-#from .user import User
+from sqlalchemy.orm import relationship
 
 
 Base = declarative_base() # All custom classes must inherit from a known Base:
 
-# # association table for many to many relationship between attraction and traveller
-# association_table = Table('attraction_traveller', Base.metadata,
-#     Column('attraction_id', Integer, ForeignKey('attraction_table.id')),
-#     Column('traveller_id', Integer, ForeignKey('user_table.id'))
-# )
 
 class User(Base):
     __tablename__ = 'user_table'
-    id = Column(Integer, primary_key=True, autoincrement=True) # unique id gets created automatically
-    name = Column(String, unique=True)  # user name has to be unique 
-    
+    id = Column(Integer, primary_key=True, autoincrement=True) # unique id gets created automatically with autoincrement
+    name = Column(String, unique=True)  # user-name has to be unique 
     password = Column(String)   
     type = Column(String) # provider or traveller
 
     # Many-to-One relationship with Attraction through provider_id
-    attractions = relationship("Attraction", backref="provider")
+    attractions = relationship("Attraction", backref="provider", overlaps="attractions,provider") 
 
-    #attractions = relationship("Attraction",  secondary='attraction_traveller', back_populates="users") # one to many relationship with attraction 
-    
     # Many-to-Many relationship with Attraction through secondary table
     visited_attractions = relationship("Attraction", secondary='attraction_traveller', back_populates="visitors")
     
     # Many to One relationship with Attraction
-    favourite_attractions = relationship("Attraction", backref="attractions")
+    favourite_attractions = relationship("Attraction", backref="attractions", overlaps="attractions,provider")
 
     def __init__(self):
         self.attractions = [] 
@@ -37,16 +28,13 @@ class User(Base):
 
 class Attraction(Base):
     __tablename__ = 'attraction_table'
-    # use UUID as primary key?
+
     id = Column(Integer, autoincrement=True, primary_key=True) # unique id gets created automatically
     name = Column(String)
     description = Column(String)
     contact = Column(String)
     price_range = Column(String)
     rating = Column(Float)
-    #reviews = Column(String)
-    #bookings = Column(String)
-    #visited = Column(String)
     special_offer = Column(String)
     destination = Column(String)
     attraction_type = Column(String)
@@ -65,14 +53,8 @@ class Attraction(Base):
     #travellers_ids = relationship('User', secondary='attraction_traveller', back_populates='visited_attractions')
     
     def __init__(self): 
-        #self.travellers_ids = [] # list of traveller ids that visited the attraction
-        # needed?
         pass
 
-
-
-engine = create_engine('sqlite:///travel_app.db', echo=True)
-Base.metadata.create_all(engine) # creates table when it does not exist
 
 # association table for many to many relationship between attraction and traveller
 association_table = Table('attraction_traveller', Base.metadata,
@@ -80,14 +62,8 @@ association_table = Table('attraction_traveller', Base.metadata,
     Column('traveller_id', Integer, ForeignKey('user_table.id'))
 )
 
-Base.metadata.create_all(engine) # creates table when it does not exist
 
-
-#User.attractions = relationship('Attraction', secondary=association_table, backref="users")
-
-
-
+# create the engine and the tables in the database (if they do not exist yet):
 # gets executed when the file is imported
-# create engine and create the tables in the database (if they do not exist):
-
-Base.metadata.create_all(engine) # creates table when it does not exist
+engine = create_engine('sqlite:///travel_app.db') # create a database file
+Base.metadata.create_all(engine) # creates tables if they don't exist yet

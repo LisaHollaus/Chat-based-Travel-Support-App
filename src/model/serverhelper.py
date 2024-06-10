@@ -2,9 +2,7 @@ import random
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Float, select, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
-#from uuid import uuid1
 
-#from .user import *
 from .tables import * # import the Attraction and User class and create the tables in the database if they don't exist
 
 
@@ -13,12 +11,7 @@ from .tables import * # import the Attraction and User class and create the tabl
 class Agency(object):
     singleton_instance = None
     
-
-    # lists needed?
-    def __init__(self, travellers=[], providers=[], destinations=[]):
-        #self.travellers = travellers
-        #self.providers = providers
-        #self.destinations = destinations
+    def __init__(self):
         self.engine = create_engine('sqlite:///travel_app.db', echo=True)
         #self.connection = self.engine.connect() # connect to the database
         self.loged_in_user_id = None # to keep track of the loged in user
@@ -68,26 +61,65 @@ class Agency(object):
         session.close()
         return user
     
+    
+    def get_attraction(self, name, destination):
+        session = self.start_session()
+        attraction = session.query(Attraction).filter(Attraction.name == name, Attraction.destination == destination).first() # get the attraction from the database or None
+        session.close()
+        if attraction:
+            return attraction
+        return "Attraction not found!"
+
     def get_attraction_details(self, attraction):
         session = self.start_session()
-        attraction = session.query(Attraction).filter(attraction.id == attraction.id).first() # get the attraction from the database again to access the visitors
-        visitors = session.query(Attraction).get(attraction.visitors) if attraction.visitors else [] # get the visitors of the attraction or an empty list 
+        attraction = session.query(Attraction).filter(Attraction.id == attraction.id).first() # get the attraction from the database again to access the visitors
+        visitors = attraction.visitors if attraction.visitors else [] # get the visitors of the attraction or an empty list
+        #visitors = session.query(Attraction).get(attraction.visitors) if attraction.visitors else [] # get the visitors of the attraction or an empty list 
         session.close()
         return f"\nName: {attraction.name}\nDestination: {attraction.destination}\nType: {attraction.attraction_type}\nPrice range: {attraction.price_range}\nDescription: {attraction.description}\nContact: {attraction.contact}\nSpecial offer: {attraction.special_offer}\nRating: {attraction.rating} \nVisited by at least {len(visitors)} travellers" 
 
     
+    def view_attraction_details_loop(self, conn, traveller = False): # traveller is an optional parameter to give the traveller the option to add the attraction to the faviorites list
+        while True:
+            # receive the name and destination of the attraction
+            name = conn.recv(4096).decode()
+            destination = conn.recv(4096).decode()
+            # get the attraction
+            attraction = Agency.get_instance().get_attraction(name, destination)
+            
+            # send the attraction details or "Attraction not found!"
+            if attraction == "Attraction not found!":
+                conn.send(attraction.encode())
+            else: 
+                attraction_details = Agency.get_instance().get_attraction_details(attraction) 
+                conn.send(attraction_details.encode())
+
+                # if the user is a traveller and the attraction was found he can add it to his favourites
+                if traveller: 
+                    favourite = conn.recv(4096).decode() # "Would you like to add this attraction to your favourites? (yes/no)"
+                    if favourite.lower() == "yes":
+                        added = Agency.get_instance().add_to_favourites(attraction)
+                        conn.send(added.encode()) # "Attraction added to favourites!" or "Attraction already in favourites!"
+                    else:
+                        conn.send(" ".encode()) # send a blank message to keep the conversation going
+                                
+            # "Would you like to see details of another attraction? (yes/no)"
+            answer = conn.recv(4096).decode()
+            if answer.lower() == "no":
+                break
+            
 
 
 # traveller functions:
 
     def get_options_traveller(self):
-        return {1: "explore attractions", 2: "get details of a specific attraction", 3: "see favorite attractions", 4: "rate visited attraction", 5: "history of visited attractions", 6: "logout"}
+        return {1: "explore attractions", 2: "get details of a specific attraction", 3: "see favorite attractions", 4: "rate visited attraction", 5: "see history of visited attractions", 6: "logout"}
 
     def get_destinations(self):
         session = self.start_session()
         destinations = session.query(Attraction.destination).all() # get all destinations from the database as a list of tuples
         session.close()
-        # no if/else needed because there should always be destinations in the database
+        # There should always be destinations in the database
         destinations = sorted(list(set([destination[0] for destination in destinations]))) # remove duplicates and convert to a sorted list
         return ",".join(destinations) # return the destinations as a string separated by commas so we can send it to the client
     
@@ -100,9 +132,9 @@ class Agency(object):
         session.close()
         if attractions:
             attractions = sorted([f"{attraction.attraction_type}: {attraction.name}" for attraction in attractions]) 
-            attractions = f"Here's a list of all attractions in {destination}:\n" + ",".join(attractions) # add the destination to the list
+            attractions = f"Here's a list of all attractions in {destination}:\n" + ",".join(attractions) # add the destination to the list and return it as a string separated by commas
         else:
-            attractions = "no attractions found!"
+            attractions = "No attractions found!"
         return attractions
 
     def visit_attraction(self, attraction):
@@ -175,18 +207,6 @@ class Agency(object):
         return visited_attractions
         
         
-   # def get_destinations(self):
-    #    session = self.start_session()
-     #   destinations = session.query(Attraction.destination).all() # get all destinations from the database as a list of tuples
-      #  session.close()
-       # destinations = sorted(list(set([destination[0] for destination in destinations]))) # remove duplicates and convert to a sorted list
-        #return destinations
-
-    
-    
-
-
-
 
 
 
@@ -221,22 +241,12 @@ class Agency(object):
         
         # Load the currentlly loged in user
         loged_in_user = session.query(User).get(self.loged_in_user_id)
-
-        # Refresh loged_in_user to make sure it has the latest data
-        #session.refresh(loged_in_user)
-
         loged_in_user.attractions.append(attraction)
+        session.commit()
 
         session.close()
         return attraction
     
-    def get_attraction(self, name, destination):
-        session = self.start_session()
-        attraction = session.query(Attraction).filter(Attraction.name == name, Attraction.destination == destination).first() # get the attraction from the database or None
-        session.close()
-        if attraction:
-            return attraction
-        return "Attraction not found!"
 
     def get_id(self):
         return self.loged_in_user_id
@@ -265,7 +275,7 @@ class Agency(object):
             
     
     
-    def get_attractions(self):
+    def get_attractions(self): # get all attractions of the provider
         session = self.start_session()
        
         user = session.query(User).get(self.loged_in_user_id)
@@ -274,7 +284,7 @@ class Agency(object):
         else: 
             attractions = ["no attractions found!"] # return this in a list to be able to iterate over it
         session.close()
-        return attractions
+        return ",".join(attractions) # return the attractions as a string separated by commas so we can send it to the client
     
 
 
