@@ -8,6 +8,8 @@ from sqlalchemy.orm import sessionmaker, relationship
 from .tables import * # import the Attraction and User class and create the tables in the database if they don't exist
 
 
+
+# Agency class to support the server side of the application
 class Agency(object):
     singleton_instance = None
     
@@ -58,19 +60,28 @@ class Agency(object):
         session.close() 
         return user
     
-    def get_user(self, name, password):
+    def get_user(self, name, password, type):
         session = self.start_session()
-        user = session.query(User).filter(User.name == name, User.password == password).first() # get the user from the database .first() returns the first result or None
+        user = session.query(User).filter(User.name == name, User.password == password, User.type == type).first() # get the user from the database .first() returns the first result or None
         if user:
             self.loged_in_user_id = user.id # set the loged in user
         session.close()
         return user
     
+    def get_attraction_details(self, attraction):
+        session = self.start_session()
+        attraction = session.query(Attraction).filter(attraction.id == attraction.id).first() # get the attraction from the database again to access the visitors
+        visitors = session.query(Attraction).get(attraction.visitors) if attraction.visitors else [] # get the visitors of the attraction or an empty list 
+        session.close()
+        return f"\nName: {attraction.name}\nDestination: {attraction.destination}\nType: {attraction.attraction_type}\nPrice range: {attraction.price_range}\nDescription: {attraction.description}\nContact: {attraction.contact}\nSpecial offer: {attraction.special_offer}\nRating: {attraction.rating} \nVisited by at least {len(visitors)} travellers" 
+
+    
+
 
 # traveller functions:
 
     def get_options_traveller(self):
-        return {1: "explore attractions", 2: "get details of a specific attraction", 3: "rate visited attraction", 4: "logout"}
+        return {1: "explore attractions", 2: "get details of a specific attraction", 3: "see favorite attractions", 4: "rate visited attraction", 5: "history of visited attractions", 6: "logout"}
 
     def get_destinations(self):
         session = self.start_session()
@@ -78,7 +89,7 @@ class Agency(object):
         session.close()
         # no if/else needed because there should always be destinations in the database
         destinations = sorted(list(set([destination[0] for destination in destinations]))) # remove duplicates and convert to a sorted list
-        return destinations 
+        return ",".join(destinations) # return the destinations as a string separated by commas so we can send it to the client
     
     def get_attractions_by_destination(self, destination):
         session = self.start_session()
@@ -89,8 +100,9 @@ class Agency(object):
         session.close()
         if attractions:
             attractions = sorted([f"{attraction.attraction_type}: {attraction.name}" for attraction in attractions]) 
+            attractions = f"Here's a list of all attractions in {destination}:\n" + ",".join(attractions) # add the destination to the list
         else:
-            attractions = ["no attractions found!"]
+            attractions = "no attractions found!"
         return attractions
 
     def visit_attraction(self, attraction):
@@ -100,7 +112,68 @@ class Agency(object):
         session.commit()
         session.close()
         return "Attraction visited!"
+    
+    def add_to_favourites(self, attraction):
+        session = self.start_session()
+        user = session.query(User).get(self.loged_in_user_id)
+        try:
+            user.favourite_attractions.append(attraction)
+            session.commit()
+            session.close()
+            return "Attraction added to favourites!"
+        except:
+            session.close()
+            return "Attraction already in favourites!"
+        
 
+    def get_favourites(self):
+        session = self.start_session()
+        user = session.query(User).get(self.loged_in_user_id)
+        if user.favourite_attractions:
+            favourites = sorted([f"{attraction.name} in {attraction.destination}" for attraction in user.favourite_attractions]) # get the names and their destination of the attractions
+        else:
+            favourites = ["no favourite attractions found!"] # return this in a list to be able to iterate over it
+        session.close()
+        return favourites
+    
+
+    def check_if_rated(self, attraction):
+        session = self.start_session()
+        user = session.query(User).get(self.loged_in_user_id)
+        if attraction in user.visited_attractions:
+            session.close()
+            return True
+        session.close()
+        return False
+    
+    def rate_attraction(self, attraction, rating):
+        session = self.start_session()
+        attraction = session.query(Attraction).get(attraction.id) # get the attraction from the database again to commit the changes
+        if attraction.rating == None:
+            attraction.rating = rating
+        else:
+            attraction.rating = (float(attraction.rating) + float(rating)) / 2 # calculate the new rating
+        
+        user = session.query(User).get(self.loged_in_user_id)
+        attraction.visitors.append(user) # add the user to the visitors
+        session.commit()
+        
+        user.visited_attractions.append(attraction)
+        session.commit()
+        session.close()
+        return "Attraction rated! \n Thank you for your feedback!"
+
+
+    def get_visited_attractions(self):
+        session = self.start_session()
+        user = session.query(User).get(self.loged_in_user_id)
+        if user.visited_attractions:
+            visited_attractions = sorted([f"{attraction.name} in {attraction.destination}" for attraction in user.visited_attractions]) # get the names and their destination of the attractions
+        else:
+            visited_attractions = ["no visited attractions found!"] # return this in a list to be able to iterate over it
+        session.close()
+        return visited_attractions
+        
         
    # def get_destinations(self):
     #    session = self.start_session()
@@ -109,7 +182,8 @@ class Agency(object):
        # destinations = sorted(list(set([destination[0] for destination in destinations]))) # remove duplicates and convert to a sorted list
         #return destinations
 
-
+    
+    
 
 
 
@@ -202,8 +276,8 @@ class Agency(object):
         session.close()
         return attractions
     
-    def get_attraction_details(self, attraction):
-        return f"\nName: {attraction.name}\nDestination: {attraction.destination}\nType: {attraction.attraction_type}\nPrice range: {attraction.price_range}\nDescription: {attraction.description}\nContact: {attraction.contact}\nSpecial offer: {attraction.special_offer}\n Rating: {attraction.rating} \nVisited by: {len(attraction.visitors)} travellers \nReviews: {attraction.reviews}\n" 
+
+
 
     
-    
+   

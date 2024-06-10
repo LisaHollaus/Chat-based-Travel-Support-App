@@ -44,7 +44,7 @@ class Attraction(Base):
     contact = Column(String)
     price_range = Column(String)
     rating = Column(Float)
-    reviews = Column(String)
+    #reviews = Column(String)
     #bookings = Column(String)
     #visited = Column(String)
     special_offer = Column(String)
@@ -65,8 +65,10 @@ class Attraction(Base):
     #travellers_ids = relationship('User', secondary='attraction_traveller', back_populates='visited_attractions')
     
     def __init__(self): 
-        self.travellers_ids = [] # list of traveller ids that visited the attraction
+        #self.travellers_ids = [] # list of traveller ids that visited the attraction
         # needed?
+        pass
+
 
 
 engine = create_engine('sqlite:///travel_app.db', echo=True)

@@ -8,8 +8,9 @@ A chat based Travel-Support-App
 ### Some notes on how to run the code via Terminal:
 1. Direct into the Assignment_2/src directory and execute:
     python -m sockets.server
-2. run Assignment_2/src/client.py file and
-3. simply follow the Steps in the terminal
+2. Execute in a new terminal:
+    python -m sockets.client
+3. Simply follow the Steps in the terminal on the client side
 
 ### Changes from the initional proposal:
 Overall I made some slight changes to my initional proposal as I realised, that some ideas of mine weren't that practical and could be improved. For eample:
@@ -25,12 +26,15 @@ Overall I made some slight changes to my initional proposal as I realised, that 
 
 
 
+
 # to do
-- add a favourites list to menu. Implement in the end of viewing an attraction "Would you like to add this Attraction to your faviourits list?". Make the relationship work
+
 - when leaving a review/rating the attraction gets added to visited attractions
-- extra menu point to show visited attractions
 
+- get rid of reviews and only keep rating
 
+- run pytest over everything (add to instructions)
 
 cd C:/Users/lisah/Assignment_2/src
 python -m sockets.server
+python -m sockets.client
