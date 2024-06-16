@@ -6,11 +6,19 @@ A chat based Travel-Support-App
 -An Attraction can not be added if another one with the same name & same destination already exists.
 
 ### Some notes on how to run the code via Terminal:
-1. Direct into the Assignment_2/src directory and execute:
-    python -m sockets.server
-2. Execute in a new terminal:
-    python -m sockets.client
-3. Simply follow the Steps in the terminal on the client side
+1. Create virtual environment, activate and install dependencies 
+2. Direct into the Assignment_2 directory (root directory) and execute:
+    python src.sockets.server
+    (In visual Studio Code I had to use: python -m src.sockets.server)
+
+3. Execute in a new terminal:
+    python src.sockets.client
+    (In visual Studio Code I had to use: python -m src.sockets.server)
+    (I recomend to use Pycharm)
+    
+4. Simply follow the Steps in the terminal on the client side
+
+- For testing the application, simply run pytest in the root directory
 
 ### Changes from the initional proposal:
 Overall I made some slight changes to my initional proposal as I realised, that some ideas of mine weren't that practical and could be improved. For eample:
@@ -23,18 +31,37 @@ Overall I made some slight changes to my initional proposal as I realised, that 
 ### Some additional notes on design choices:
 
 - I defined the User and Attraction class in one file, because seperating them would have interfered with creating the many to many relationship between the Users-attraction and the Attractions-traveller_id. 
+- In my initional Proposal I had a "Agency", which I reneamed to ServerHelper, as all it does is helping the Server. I also added a ClientHelper, as it made my code a lot shorter.
 
+### Things I would change if I had more time:
+Looking back and knowing what I know now I could have made some improvements/changes as I learned a lot along the way:
+- I could have used a context manager to close the connection at the end of many functions
+- there probably would have been a way to awoid the many to many relationship and the extra table for it in my Database 
+- The tests fullfill their purpose, but I think there would have been better/easier ways to test my functions (using testdata). 
+- generally I think there would have been more ocations to shorten my code, by adding additional functions
+- I found out about the session.merge() function very late (to bind objects to a session). I believe it could have made my code on many ocations simpler and shorter
+- Also, I believe there would have been better ways to test my client and server functions. I believe with more time and research I could have found a way to test the client and server functions more efficiently and thoroughly.
 
+After all I think I learned a lot along the process, as many things were still new to me. So I believe this is not the optimal way to approach a travel-helper-app like my initional idea was, but it helped me a lot in my learning process and I hope it's good enough. :) 
 
 
 # to do
 
-- when leaving a review/rating the attraction gets added to visited attractions
+- def test_get_attraction_details_loop(clienthelper):
+    pass
+    
+- def test_view_attraction_details_loop(serverhelper):
+    pass
 
-- get rid of reviews and only keep rating
+- test_client
+- test_server
 
-- run pytest over everything (add to instructions)
+- solve sql relationship overlaps
 
-cd C:/Users/lisah/Assignment_2/src
-python -m sockets.server
-python -m sockets.client
+
+
+
+python -m src.sockets.server
+python -m src.sockets.client
+cd .venv
+.\Scripts\activate

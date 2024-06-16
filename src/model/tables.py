@@ -1,10 +1,8 @@
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Float, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy import create_engine, Table, Column, Integer, String, Float, ForeignKey
+from sqlalchemy.orm import relationship, declarative_base
 
-
-Base = declarative_base() # All custom classes must inherit from a known Base:
-
+# All custom classes must inherit from a known Base:
+Base = declarative_base() 
 
 class User(Base):
     __tablename__ = 'user_table'
@@ -14,16 +12,17 @@ class User(Base):
     type = Column(String) # provider or traveller
 
     # Many-to-One relationship with Attraction through provider_id
-    attractions = relationship("Attraction", backref="provider", overlaps="attractions,provider") 
+    attractions = relationship("Attraction", backref="provider", overlaps="favourite_attractions")
 
     # Many-to-Many relationship with Attraction through secondary table
     visited_attractions = relationship("Attraction", secondary='attraction_traveller', back_populates="visitors")
     
-    # Many to One relationship with Attraction
-    favourite_attractions = relationship("Attraction", backref="attractions", overlaps="attractions,provider")
+    # Many-to-One relationship with Attraction
+    favourite_attractions = relationship("Attraction", backref="favourites", overlaps="provider")
 
     def __init__(self):
-        self.attractions = [] 
+        pass
+
 
 
 class Attraction(Base):
@@ -39,18 +38,11 @@ class Attraction(Base):
     destination = Column(String)
     attraction_type = Column(String)
 
-
     # Many-to-One relationship with User
     provider_id = Column(Integer, ForeignKey('user_table.id'))
 
     # Many-to-Many relationship with User
     visitors = relationship('User', secondary='attraction_traveller', back_populates='visited_attractions')
-
-    # foreign keys:
-    #provider_id = Column(Integer, ForeignKey('user_table.id')) # many to one relationship with user
-    
-    # many to many relationship with traveller
-    #travellers_ids = relationship('User', secondary='attraction_traveller', back_populates='visited_attractions')
     
     def __init__(self): 
         pass
@@ -65,5 +57,5 @@ association_table = Table('attraction_traveller', Base.metadata,
 
 # create the engine and the tables in the database (if they do not exist yet):
 # gets executed when the file is imported
-engine = create_engine('sqlite:///travel_app.db') # create a database file
+engine = create_engine('sqlite:///../../travel_app.db') # create a database file
 Base.metadata.create_all(engine) # creates tables if they don't exist yet
