@@ -1,7 +1,5 @@
-import pytest
 from unittest.mock import patch, MagicMock
 from src.sockets.client import *
-from tests.fixtures import socket_connection as s
 
 
 def test_connect():
@@ -28,6 +26,7 @@ def test_start_client_existing(s):
     assert type == 'provider'
     assert user == 'Alice'
 
+
 # try to log in with wrong password
 # this replaces the input() function with a function that returns 'traveller', 'no', 'Alice', 'wrong_password'
 @patch('builtins.input', side_effect=['provider', 'no', 'Alice', 'wrong_password'])
@@ -35,6 +34,7 @@ def test_start_client_wrong_password(s):
     type, user = start_client(s)
     assert type == 'provider'
     assert user == 'Alice'
+
 
 # creat new user with existing username
 # this replaces the input() function with a function that returns 'traveller', 'yes', 'Alice', 'my_password'
@@ -93,7 +93,7 @@ def test_provider_add_attraction(mock_socket, mock_input):
 # using the mock socket to simulate the user response (replacing the input() function)
 @patch('builtins.input', side_effect=[
     '2',
-    'yes', # decision to view attraction details
+    'yes',  # decision to view attraction details
     'Olli',  # name
     'Miami',  # destination
     'NO',  # decision to view another attraction
@@ -152,7 +152,6 @@ def test_provider_update_attraction(mock_socket, mock_input):
     # Call the provider function with the mock socket
     provider(mock_socket)
 
-
     # Check that the send method was called with the correct arguments
     mock_socket.send.assert_any_call('3'.encode())
     mock_socket.send.assert_any_call('Olli'.encode())
@@ -200,7 +199,7 @@ def test_provider_remove_attraction(mock_socket, mock_input):
     assert mock_socket.send.call_count == 4
 
 
-# 5. decision to logout
+# 5. decision to log out
 # using the mock socket to simulate the user response (replacing the input() function)
 @patch('builtins.input', side_effect=[
     '5',  # decision
@@ -224,9 +223,7 @@ def test_provider_logout(mock_socket, mock_input):
     assert mock_socket.send.call_count == 1
 
 
-
 ## traveller menu
-
 # 1. decision to explore attractions
 # using the mock socket to simulate the user response (replacing the input() function)
 @patch('builtins.input', side_effect=[
@@ -285,7 +282,7 @@ def test_traveller_get_details(mock_socket, mock_input):
     mock_socket.recv.side_effect = [
         '{"1": "Explore attractions", "2": "Get details of a specific attraction", "3": "See favorite attractions", "4": "Rate visited attraction", "5": "See history of visited attractions", "6": "Logout"}'.encode(),
         'Attraction details'.encode(),
-        ''.encode(), # for not adding the attraction to the favourites
+        ''.encode(),  # for not adding the attraction to the favourites
         '{"1": "Explore attractions", "2": "Get details of a specific attraction", "3": "See favorite attractions", "4": "Rate visited attraction", "5": "See history of visited attractions", "6": "Logout"}'.encode(),
     ]
     # Call the traveller function with the mock socket
@@ -357,7 +354,7 @@ def test_traveller_rate_attraction(mock_socket, mock_input):
     # Mock the recv method to simulate the server response
     mock_socket.recv.side_effect = [
         '{"1": "Explore attractions", "2": "Get details of a specific attraction", "3": "See favorite attractions", "4": "Rate visited attraction", "5": "See history of visited attractions", "6": "Logout"}'.encode(),
-        'Attraction found'.encode(), # needed to stay in the loop
+        'Attraction found'.encode(),  # needed to stay in the loop
         'Attraction rated! Thank you for your feedback!'.encode(),
         '{"1": "Explore attractions", "2": "Get details of a specific attraction", "3": "See favorite attractions", "4": "Rate visited attraction", "5": "See history of visited attractions", "6": "Logout"}'.encode(),
     ]
@@ -413,7 +410,7 @@ def test_traveller_see_history(mock_socket, mock_input):
     assert mock_socket.send.call_count == 6
 
 
-# 6. decision to logout
+# 6. decision to log out
 # using the mock socket to simulate the user response (replacing the input() function)
 @patch('builtins.input', side_effect=[
     '6',  # decision

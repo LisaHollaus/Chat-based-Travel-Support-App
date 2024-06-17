@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock  # for simulating user input and output
 from src.model.tables import *
 from tests.fixtures import serverhelper
 
@@ -16,11 +16,11 @@ def test_start_session(serverhelper):
 
 
 def test_create_user(serverhelper):
-    # prepear
+    # prepare
     session = serverhelper.start_session()
     # delete test user if he already exists
     delete_user = session.query(User).filter(User.name == 'Maximilian', User.type == 'traveller', User.password == 'password').first()
-    if delete_user: # if the user exists, delete him
+    if delete_user:  # if the user exists, delete him
         session.delete(delete_user)
         session.commit()
 
@@ -32,17 +32,17 @@ def test_create_user(serverhelper):
     assert user.password == 'password'
     # check if the user is in the database
     user_query = session.query(User).filter(User.name == 'Maximilian').first()
-    assert user_query is not None # user should be in the database
+    assert user_query is not None  # user should be in the database
 
     # make sure the user can only be created once
     user2 = serverhelper.create_user(name='Maximilian', type='traveller', password='password')
-    assert user2 == "user already exists" # user2 function should return None since user already exists
+    assert user2 == "user already exists"  # user2 function should return None since user already exists
     session.close()
 
 
 def test_get_user(serverhelper):
     # test if the function returns the correct user
-    user_query = serverhelper.get_user(name='Maximilian', type='traveller', password='password') # user added in the previous test
+    user_query = serverhelper.get_user(name='Maximilian', type='traveller', password='password')  # user added in the previous test
     assert user_query.name == 'Maximilian'
     assert user_query.type == 'traveller'
     assert user_query.password == 'password'
@@ -54,9 +54,9 @@ def test_get_user(serverhelper):
 
 def test_get_attraction(serverhelper):
     # test if the function returns the correct attractions
-    # prepear (add an attraction to the database)
+    # prepare (add an attraction to the database)
     session = serverhelper.start_session()
-    attraction = serverhelper.add_attraction(name='Joes', description='-', contact='joe@jams.com', price_range='20-30', special_offer='-', destination='Malibu', attraction_type='Surfing lessons')
+    serverhelper.add_attraction(name='Joes', description='-', contact='joe@jams.com', price_range='20-30', special_offer='-', destination='Malibu', attraction_type='Surfing lessons')
     
     attraction = serverhelper.get_attraction(name='Joes', destination='Malibu')
     assert attraction.name == 'Joes'
@@ -86,13 +86,32 @@ def test_get_attraction_details(serverhelper):
     assert attraction_details == "\nName: Joes\nDestination: Malibu\nType: Surfing lessons\nPrice range: 20-30\nDescription: -\nContact: joe@jams.com\nSpecial offer: -\nRating: None \nVisited by at least 0 travellers"
 
 
+@patch('src.sockets.server.ServerHelper')  # mock ServerHelper class
+@patch('socket.socket', new_callable=MagicMock)
+def test_view_attraction_details_loop(mock_server_helper, mock_socket, serverhelper):
+    # Set up the mock socket's recv method to return the values that the view_attraction_details_loop function expects
+    mock_socket.recv.side_effect = [
+        "Attraction1".encode(),  # name of the attraction
+        "Location1".encode(),  # location of the attraction
+        "no".encode(),  # decision to add to favourites
+        "no".encode()  # decision to not continue
+    ]
 
+    # Set up the mock socket's send method to return a value
+    mock_socket.send.return_value = None  # the return value is not important
 
+    # Mock the get_attraction and get_attraction_details methods to return a specific attraction
+    mock_server_helper.get_instance().get_attraction.return_value = Attraction()
+    mock_server_helper.get_instance().get_attraction_details.return_value = "Attraction details"
+    mock_server_helper.get_instance().add_to_favourites.return_value = "Attraction added to favourites!"
 
-def test_view_attraction_details_loop(serverhelper):
-    pass
+    # Call the view_attraction_details_loop function with the mock socket
+    serverhelper.view_attraction_details_loop(mock_socket, traveller=True)
 
-
+    # Check that the recv method was called to get the user's decisions
+    assert mock_socket.recv.call_count == 3
+    # Check that the send method was called to send the attraction details and the result of adding to favourites
+    assert mock_socket.send.call_count == 1
 
 
 ## traveller functions
@@ -106,20 +125,20 @@ def test_get_destinations(serverhelper):
     # test if the function returns the correct destinations
     # prepare
     # adding another destination to the database, to test if the function returns the correct destinations
-    attraction = serverhelper.add_attraction(name='Jimmys', description='Local food', destination='Hawaii', attraction_type='Restaurants', price_range='10-20', contact='j@j.com', special_offer='-')
+    serverhelper.add_attraction(name='Jimmys', description='Local food', destination='Hawaii', attraction_type='Restaurants', price_range='10-20', contact='j@j.com', special_offer='-')
 
     # get the destinations from the database
     session = serverhelper.start_session()
-    destinations = session.query(Attraction.destination).all() # get all destinations from the database as a list of tuples
+    destinations = session.query(Attraction.destination).all()  # get all destinations from the database as a list of tuples
     session.close()
-    destinations_database = [destination[0] for destination in destinations] # convert the list of tuples to a list of strings
+    destinations_database = [destination[0] for destination in destinations]  # convert the list of tuples to a list of strings
 
     # test
     destinations_function = serverhelper.get_destinations()
     for destination in destinations_database:
         assert destination in destinations_function
-        #assert 'Hawaii' in destinations_function
-        #assert 'Malibu' in destinations_function
+        # assert 'Hawaii' in destinations_function
+        # assert 'Malibu' in destinations_function
 
 
 def test_get_attractions_by_destination(serverhelper):
@@ -130,9 +149,9 @@ def test_get_attractions_by_destination(serverhelper):
 
     # get the attractions from the database
     session = serverhelper.start_session()
-    attractions = session.query(Attraction).filter(Attraction.destination == 'Hawaii').all() # get all attractions in Hawaii
+    attractions = session.query(Attraction).filter(Attraction.destination == 'Hawaii').all()  # get all attractions in Hawaii
     session.close()
-    attractions_database = [attraction.name for attraction in attractions] # convert the list of attractions to a list of attraction names
+    attractions_database = [attraction.name for attraction in attractions]  # convert the list of attractions to a list of attraction names
     
     # test
     attractions_function = serverhelper.get_attractions_by_destination('Hawaii')
@@ -148,12 +167,12 @@ def test_add_to_favourites(serverhelper):
     # test if the function adds an attraction to the favourites
     # prepare
     session = serverhelper.start_session()
-    attraction = serverhelper.get_attraction(name='JJs', destination='Hawaii') # attraction added in the previous test
+    attraction = serverhelper.get_attraction(name='JJs', destination='Hawaii')  # attraction added in the previous test
     
     # create a new user and get the user from the database
-    user = serverhelper.create_user(name='Timmy', type='traveller', password='pass') # create a new user and set him as logged in
-    user = serverhelper.get_user(name='Timmy', type='traveller', password='pass') # this is will set the user as logged in in case the user was already created in a previous test run
-    user = session.query(User).filter(User.name == 'Timmy').first() # get the user from the database so we can perform the test
+    serverhelper.create_user(name='Timmy', type='traveller', password='pass')  # create a new user and set him as logged in
+    serverhelper.get_user(name='Timmy', type='traveller', password='pass')  # this will set the user as logged-in in case the user was already created in a previous test run
+    user = session.query(User).filter(User.name == 'Timmy').first()  # get the user from the database, so we can perform the test
     
     # make sure the attraction is not in the favourites
     assert attraction not in user.favourite_attractions
@@ -162,7 +181,7 @@ def test_add_to_favourites(serverhelper):
     answer = serverhelper.add_to_favourites(attraction)
     assert answer == "Attraction added to favourites!"
 
-    session.refresh(user) # refresh the user to get the updated favourites
+    session.refresh(user)  # refresh the user to get the updated favourites
     favourite_attractions_names = [attraction.name for attraction in user.favourite_attractions]
     
     assert "JJs" in favourite_attractions_names
@@ -176,33 +195,33 @@ def test_add_to_favourites(serverhelper):
 def test_get_favourites(serverhelper):
     # create a new user to insure there are no favourite attractions
     session = serverhelper.start_session()
-    user = serverhelper.create_user(name='Joey', type='traveller', password='password123')
-    user = serverhelper.get_user(name='Joey', type='traveller', password='password123') # this is will set the user as logged in in case the user was already created in a previous test run
-    user = session.query(User).filter(User.name == 'Joey').first() # get the user from the database so we can perform the test
+    serverhelper.create_user(name='Joey', type='traveller', password='password123')  # create a new user and set him as logged in
+    serverhelper.get_user(name='Joey', type='traveller', password='password123')  # this will set the user as logged-in in case the user was already created in a previous test run
+    user = session.query(User).filter(User.name == 'Joey').first()  # get the user from the database, so we can perform the test
    
     # test if the function returns the correct favourite attractions if there are favourite attractions
-    attraction = serverhelper.get_attraction(name='JJs', destination='Hawaii') # attraction added in a previous test
+    attraction = serverhelper.get_attraction(name='JJs', destination='Hawaii')  # attraction added in a previous test
     serverhelper.add_to_favourites(attraction)
     session.commit()
-    session.refresh(user) # refresh the user to get the updated favourites
+    session.refresh(user)  # refresh the user to get the updated favourites
     favourite_attractions = serverhelper.get_favourites()
     assert "JJs in Hawaii" in favourite_attractions
     session.close()
 
     # test if the function returns "No favourite attractions found!" if there are no favourite attractions
     # create a new user to insure there are no favourite attractions
-    user = serverhelper.create_user(name='Kate', type='traveller', password='word123')
-    user = serverhelper.get_user(name='Kate', type='traveller', password='word123') # this is will set the user as logged in in case the user was already created in a previous test run
+    serverhelper.create_user(name='Kate', type='traveller', password='word123')
+    serverhelper.get_user(name='Kate', type='traveller', password='word123')  # this will set the user as logged-in in case the user was already created in a previous test run
     favourite_attractions = serverhelper.get_favourites()
     assert favourite_attractions == ["No favourite attractions found!"]
         
 
-def test_check_if_rated_False(serverhelper):
+def test_check_if_rated_false(serverhelper):
     # prepare (Kate logged in)
     session = serverhelper.start_session()
-    attraction = serverhelper.get_attraction(name='JJs', destination='Hawaii') # attraction added in a previous test
-    user = serverhelper.get_user(name='Timmy', type='traveller', password='pass') # this is will set the Timmy as logged in
-    user = session.query(User).filter(User.name == 'Timmy').first() # get the user from the database so we can perform tests
+    attraction = serverhelper.get_attraction(name='JJs', destination='Hawaii')  # attraction added in a previous test
+    serverhelper.get_user(name='Timmy', type='traveller', password='pass')  # this will set the Timmy as logged in
+    user = session.query(User).filter(User.name == 'Timmy').first()  # get the user from the database, so we can perform tests
     
     # make sure the attraction is not in the visited attractions
     visited_attractions_names = [a.name for a in user.visited_attractions]
@@ -210,7 +229,7 @@ def test_check_if_rated_False(serverhelper):
 
     # test if the function returns the correct value if the attraction is not rated
     answer = serverhelper.check_if_rated(attraction)
-    assert answer == False # the attraction is not rated
+    assert answer == False  # the attraction is not rated
     session.close()
     # test if the function returns the correct value if the attraction is rated
     # see next test
@@ -219,28 +238,27 @@ def test_check_if_rated_False(serverhelper):
 def test_rate_attraction(serverhelper):
     # prepare (Timmy logged in)
     session = serverhelper.start_session()
-    attraction = serverhelper.get_attraction(name='JJs', destination='Hawaii') # attraction added in a previous test
-    user = serverhelper.get_user(name='Kate', type='traveller', password='word123') # this will set the Kate as logged in
-    user = session.query(User).filter(User.name == 'Kate').first() # get the user from the database so we can perform tests
+    attraction = serverhelper.get_attraction(name='JJs', destination='Hawaii')  # attraction added in a previous test
+    serverhelper.get_user(name='Kate', type='traveller', password='word123')  # this will set the Kate as logged in
+    user = session.query(User).filter(User.name == 'Kate').first()  # get the user from the database, so we can perform tests
 
     # test if the function rates the attraction
     answer = serverhelper.rate_attraction(attraction, "5")
-    session.refresh(user) # refresh the user to get the updated visited attractions
+    session.refresh(user)  # refresh the user to get the updated visited attractions
     visited_attractions_names = [a.name for a in user.visited_attractions]
     assert 'JJs' in visited_attractions_names
     assert answer == "\nAttraction rated! \nThank you for your feedback!"
      
     # test if the function returns the correct value if the attraction is rated
     answer = serverhelper.check_if_rated(attraction)
-    assert answer == True # the attraction is rated
+    assert answer == True  # the attraction is rated
     session.close()
 
 
 def test_get_visited_attractions(serverhelper): 
     # prepare (Kate logged in)
     session = serverhelper.start_session()
-    user = session.query(User).filter(User.name == 'Kate').first() # get the user from the database so we can perform tests
-    #attraction = serverhelper.get_attraction(name='JJs', destination='Hawaii') # attraction added in a previous test
+    session.query(User).filter(User.name == 'Kate').first()  # get the user from the database, so we can perform tests
     # attraction rated in the previous test
 
     # test if the function returns the correct visited attractions if there are visited attractions
@@ -250,8 +268,8 @@ def test_get_visited_attractions(serverhelper):
 
     # test if the function returns "No visited attractions found!" if there are no visited attractions
     # create a new user to insure there are no visited attractions
-    user = serverhelper.create_user(name='Lara', type='traveller', password='word123')
-    user = serverhelper.get_user(name='Lara', type='traveller', password='word123') # this is will set the user as logged in in case the user was already created in a previous test run
+    serverhelper.create_user(name='Lara', type='traveller', password='word123')
+    serverhelper.get_user(name='Lara', type='traveller', password='word123')  # this will set the user as logged-in in case the user was already created in a previous test run
     
     visited_attractions = serverhelper.get_visited_attractions()
     assert visited_attractions == ["No visited attractions found!"]
@@ -268,8 +286,8 @@ def test_get_options_provider(serverhelper):
 def test_add_attraction(serverhelper):
     # prepare
     # create a provider (needs to be logged in to add an attraction)
-    user = serverhelper.create_user(name='Clark', type='provider', password='p')
-    user = serverhelper.get_user(name='Clark', type='provider', password='p') # this is will set the user as logged in in case the user was already created in a previous test run
+    serverhelper.create_user(name='Clark', type='provider', password='p')
+    serverhelper.get_user(name='Clark', type='provider', password='p')  # this will set the user as logged-in in case the user was already created in a previous test run
     
     # delete the attraction if it already exists
     attraction = serverhelper.get_attraction(name='Kimsy', destination='Tokio')
@@ -296,7 +314,7 @@ def test_get_id(serverhelper):
     # test if the function returns the correct id
     # prepare (Clark logged in)
     session = serverhelper.start_session()
-    user = session.query(User).filter(User.name == 'Clark').first() # get the user from the database so we can perform tests
+    user = session.query(User).filter(User.name == 'Clark').first()  # get the user from the database, so we can perform tests
     
     # test
     id = serverhelper.get_id()
@@ -307,8 +325,8 @@ def test_get_id(serverhelper):
 def test_update_attraction(serverhelper):
     # prepare (Clark logged in)
     session = serverhelper.start_session()
-    user = session.query(User).filter(User.name == 'Clark').first() # get the user from the database so we can perform tests
-    attraction = serverhelper.get_attraction(name='Kimsy', destination='Tokio') # attraction added in a previous test
+    session.query(User).filter(User.name == 'Clark').first()  # get the user from the database, so we can perform tests
+    attraction = serverhelper.get_attraction(name='Kimsy', destination='Tokio')  # attraction added in a previous test
     attraction = session.merge(attraction)
     
     # making sure the attraction is in database and not updated
@@ -331,10 +349,10 @@ def test_update_attraction(serverhelper):
 def test_remove_attraction(serverhelper):
     # prepare (Clark logged in)
     session = serverhelper.start_session()
-    user = session.query(User).filter(User.name == 'Clark').first() # get the user from the database so we can perform tests
+    session.query(User).filter(User.name == 'Clark').first()  # get the user from the database, so we can perform tests
     # create an attraction to remove 
-    attraction = serverhelper.add_attraction(name='Sweet and Spicy', description='quick and delicious', destination='Tokio', attraction_type='Restaurant', price_range='5-10', contact='sweet.spicy@gmail.com', special_offer='-')
-    attraction = serverhelper.get_attraction(name='Sweet and Spicy', destination='Tokio') # get the attraction from the database if already created
+    serverhelper.add_attraction(name='Sweet and Spicy', description='quick and delicious', destination='Tokio', attraction_type='Restaurant', price_range='5-10', contact='sweet.spicy@gmail.com', special_offer='-')
+    attraction = serverhelper.get_attraction(name='Sweet and Spicy', destination='Tokio')  # get the attraction from the database if already created
 
     # making sure the attraction is in database
     assert attraction != "Attraction not found!"
@@ -363,8 +381,8 @@ def test_get_attractions(serverhelper):
 
     # test if the function returns "No attractions found!" if the provider has not added any attractions
     # create a new provider to insure there are no attractions
-    user = serverhelper.create_user(name='Laura', type='provider', password='word1234')
-    user = serverhelper.get_user(name='Laura', type='provider', password='word1234') # this is will set the user as logged in in case the user was already created in a previous test run
+    serverhelper.create_user(name='Laura', type='provider', password='word1234')
+    serverhelper.get_user(name='Laura', type='provider', password='word1234')  # this will set the user as logged-in in case the user was already created in a previous test run
     attractions = serverhelper.get_attractions()
     assert attractions == "No attractions found!"
     session.close()
