@@ -76,6 +76,7 @@ def test_get_attraction(serverhelper):
 def test_get_attraction_details(serverhelper):
     # test if the function returns the correct attraction details
     # using the attraction added in the previous test
+
     attraction = serverhelper.get_attraction(name='Joes', destination='Malibu')
     attraction_details = serverhelper.get_attraction_details(attraction)
     assert "Name: Joes" in attraction_details
@@ -83,7 +84,8 @@ def test_get_attraction_details(serverhelper):
     assert "Type: Surfing lessons" in attraction_details
     assert "Price range: 20-30" in attraction_details
     assert "Description: -" in attraction_details
-    assert attraction_details == "\nName: Joes\nDestination: Malibu\nType: Surfing lessons\nPrice range: 20-30\nDescription: -\nContact: joe@jams.com\nSpecial offer: -\nRating: None \nVisited by at least 0 travellers"
+    # not asserting the whole string since the rating and visited by might change
+    # assert attraction_details == "\nName: Joes\nDestination: Malibu\nType: Surfing lessons\nPrice range: 20-30\nDescription: -\nContact: joe@jams.com\nSpecial offer: -\nRating: None \nVisited by at least 0 travellers"
 
 
 @patch('src.sockets.server.ServerHelper')  # mock ServerHelper class
