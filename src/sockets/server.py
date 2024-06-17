@@ -97,7 +97,7 @@ def traveller_loop(conn):
             if attractions_str == "No attractions found!":
                 continue
 
-            # "Would you like to see details of any of these attractions? (yes/no)"
+            # "Would you like to see details of these attractions? (yes/no)"
             answer = conn.recv(4096).decode()
             if answer.lower() == "yes":
                 #ServerHelper.get_instance().view_attraction_details_loop(traveller=True, conn) # we don't use this function here because we don't need to ask for the destination as well
@@ -110,10 +110,10 @@ def traveller_loop(conn):
                     else: 
                         attraction_details = ServerHelper.get_instance().get_attraction_details(attraction) 
                         conn.send(attraction_details.encode())
-                        favourite = conn.recv(4096).decode() # "Would you like to add this attraction to your favourites? (yes/no)"
+                        favourite = conn.recv(4096).decode()  # "Would you like to add this attraction to your favourites? (yes/no)"
                         if favourite.lower() == "yes":
                             added = ServerHelper.get_instance().add_to_favourites(attraction)
-                            conn.send(added.encode()) # "Attraction added to favourites!" or "Attraction already in favourites!"
+                            conn.send(added.encode())  # "Attraction added to favourites!" or "Attraction already in favourites!"
                         else:
                             conn.send(" ".encode())
                         
@@ -147,7 +147,7 @@ def traveller_loop(conn):
                 continue
                 
             check = ServerHelper.get_instance().check_if_rated(attraction)
-            if check: # true if the attraction was already rated (in visited attractions)
+            if check:  # true if the attraction was already rated (in visited attractions)
                 conn.send("You already rated this attraction!".encode())
                 continue
             else: 
@@ -156,7 +156,7 @@ def traveller_loop(conn):
             # get rating and review
             rating = conn.recv(4096).decode()
             rated = ServerHelper.get_instance().rate_attraction(attraction, rating)
-            conn.send(rated.encode()) # "Attraction rated! Thank you for your feedback!"	
+            conn.send(rated.encode())  # "Attraction rated! Thank you for your feedback!"
 
         # history of visited attractions
         elif decision == "5":
@@ -172,6 +172,7 @@ def traveller_loop(conn):
         # logout
         elif decision == "6":
             break
+
 
 # while logged in as provider:
 def provider_loop(conn):
@@ -213,7 +214,7 @@ def provider_loop(conn):
             # "Would you like to see details of any attraction? (yes/no)"
             answer = conn.recv(4096).decode() 
             if answer.lower() == "yes":
-                ServerHelper.get_instance().view_attraction_details_loop(conn) # get attraction details of one or more attractions and print them
+                ServerHelper.get_instance().view_attraction_details_loop(conn)  # get attraction details of one or more attractions and print them
 
         # update attraction
         elif decision == "3":
@@ -225,7 +226,7 @@ def provider_loop(conn):
             attraction = ServerHelper.get_instance().get_attraction(name, destination)
             
             if attraction == "Attraction not found!":
-                conn.send(attraction.encode()) # "Attraction not found!"
+                conn.send(attraction.encode())  # "Attraction not found!"
                 continue
             
             # provider can only update his own attractions
@@ -261,7 +262,7 @@ def provider_loop(conn):
             
             # update the attraction
             update = ServerHelper.get_instance().update_attraction(attraction)
-            conn.send(update.encode()) # "Attraction updated!" 
+            conn.send(update.encode())  # "Attraction updated!"
 
         # remove attraction
         elif decision == "4":
@@ -279,7 +280,7 @@ def provider_loop(conn):
             if conformation:
                 conn.send(conformation.encode())  # "Attraction belongs to another provider!"
             else:  # if the attraction was removed successfully (conformation == None)
-                conn.send("Attraction removed!".encode()) # sends none if removed           
+                conn.send("Attraction removed!".encode())  # sends none if removed
 
         # logout 
         elif decision == "5":
@@ -296,5 +297,3 @@ if __name__ == "__main__":
         conn, addr = s.accept()  # this waits for a client to connect
         thread = threading.Thread(target=handle_client, args=(conn, addr))  # create a new thread
         thread.start()  # start the thread
-
-

@@ -16,7 +16,6 @@ def start_client(s):
         type = input(">>> ")
     s.send(type.encode())  # send the type to the server
 
-
     # login or register
     while True:
         msg = input("Are you new here? (yes/no) \n>>> ")  # input "yes" or "no"  
@@ -27,15 +26,15 @@ def start_client(s):
             s.send(msg.encode())  # sends "yes" to the server
             print("please enter your username: ")
             user = input(">>> ") or "-"  # input a username
-            s.send(user.encode()) # send the username to the server or "-" if no input
+            s.send(user.encode())  # send the username to the server or "-" if no input
             print("please enter your new password: ")
             password = input(">>> ") or "-"  # input a password
             s.send(password.encode()) 
-            welcome = s.recv(4096).decode() # "welcome {username}!" or "user already exists" or "please enter a username and password"
+            welcome = s.recv(4096).decode()  # "welcome {username}!" or "user already exists" or "please enter a username and password"
             if welcome != "user already exists" and welcome != "please enter a username and password":
                 print(welcome)
                 break
-            print(welcome) # user already exists
+            print(welcome)  # user already exists
         
         # if user already exists:
         elif msg.lower() == "no":
@@ -46,11 +45,11 @@ def start_client(s):
             print("please enter your password: ")
             password = input(">>> ") or "-"  # input a password
             s.send(password.encode())
-            welcome = s.recv(4096).decode() # "welcome {username}!" or "user not found" or "please enter a username and password"
+            welcome = s.recv(4096).decode()  # "welcome {username}!" or "user not found" or "please enter a username and password"
             if welcome != "user not found" and welcome != "please enter a username and password":
-                print(welcome) # "welcome {username}!"
+                print(welcome)  # "welcome {username}!"
                 break
-            print(welcome) # user not found or please enter a username and password
+            print(welcome)  # user not found or please enter a username and password
 
         print("\nplease, try again from the start\n")
     return type, user
@@ -63,8 +62,8 @@ def traveller(s):
     options_str = s.recv(4096).decode()
 
     while True:
-    # listing the decissions of what to do:
-        decision = ClientHelper.get_instance().print_menu_get_answer(options_str) # get the user's decission
+        # listing the decisions of what to do:
+        decision = ClientHelper.get_instance().print_menu_get_answer(options_str)  # get the user's decision
         s.send(decision.encode())
 
         # explore attractions
@@ -72,7 +71,7 @@ def traveller(s):
             # find destination
             destinations_str = s.recv(4096).decode()  # receive the destinations
             print("Where would you like to go?")
-            ClientHelper.get_instance().print_list(destinations_str) # converts string to a list and print the destinations
+            ClientHelper.get_instance().print_list(destinations_str)  # converts string to a list and print the destinations
 
             destination = input("Enter a destination or 'everywhere' for a random search \n>>> ") or "-"
             s.send(destination.encode())
@@ -84,11 +83,11 @@ def traveller(s):
                 continue
 
             # "Here's a list of all attractions in {destination}:"
-            ClientHelper.get_instance().print_list(attractions_str) # converts string to a list and print the attractions or "No attractions found!"
+            ClientHelper.get_instance().print_list(attractions_str)  # converts string to a list and print the attractions or "No attractions found!"
 
             # see details of the attractions
             print("\nWould you like to see details of any of these attractions? (yes/no)")
-            answer = ClientHelper.get_instance().yes_no_loop() # make sure the user enters "yes" or "no"
+            answer = ClientHelper.get_instance().yes_no_loop()  # make sure the user enters "yes" or "no"
 
             s.send(answer.encode())  # send the answer to the server if it is "yes" or "no"
 
@@ -98,16 +97,15 @@ def traveller(s):
                     print("Please enter the name of the attraction you would like to see:")
                     name = input(">>> ") or "-"
                     s.send(name.encode())
-                    answer = s.recv(4096).decode() # "Attraction not found!" or Attraction details
-                    print(answer) # "Attraction not found!" or Attraction details
+                    answer = s.recv(4096).decode()  # "Attraction not found!" or Attraction details
+                    print(answer)  # "Attraction not found!" or Attraction details
 
-
-                    # add attraction to faviorites list if found
+                    # add attraction to favourites list if found
                     if answer != "Attraction not found!":
                         print("Would you like to add this attraction to your favorites list? (yes/no)")
-                        faviorite = ClientHelper.get_instance().yes_no_loop()
-                        s.send(faviorite.encode())
-                        print(s.recv(4096).decode()) # "Attraction added to your favorites!" or "Attraction already in favourites!" or ""
+                        favourite = ClientHelper.get_instance().yes_no_loop()
+                        s.send(favourite.encode())
+                        print(s.recv(4096).decode())  # "Attraction added to your favourites!" or "Attraction already in favourites!" or ""
 
                     # see details of another attraction
                     print("\nWould you like to see details of another attraction? (yes/no)")
@@ -117,11 +115,9 @@ def traveller(s):
                     if answer.lower() == "no":
                         break
 
-
         # get details of a specific attraction
         elif decision == "2":
-            ClientHelper.get_instance().get_attraction_details_loop(s, traveller=True) # get details of a specific attraction (see clienthelper.py for the function)
-
+            ClientHelper.get_instance().get_attraction_details_loop(s, traveller=True)  # get details of a specific attraction (see clienthelper.py for the function)
 
         # see favorite attractions
         elif decision == "3":
@@ -137,7 +133,6 @@ def traveller(s):
 
             if answer.lower() == "yes":
                 ClientHelper.get_instance().get_attraction_details_loop(s, traveller=True)
-
 
         # rate an attraction
         elif decision == "4":
@@ -182,7 +177,7 @@ def traveller(s):
 
 def provider(s):
     # while logged in as provider:
-    decisions_str = s.recv(4096).decode()  # receive the decissions
+    decisions_str = s.recv(4096).decode()  # receive the decisions
     while True:
         decision = ClientHelper.get_instance().print_menu_get_answer(decisions_str)
         s.send(decision.encode())
@@ -216,20 +211,19 @@ def provider(s):
             if confirmation == "Please try again and don't forget to add at least a name and a destination!":
                 print(confirmation)
                 continue
-            print(confirmation) # "Attraction added!" or "A attraction with the name '{attraction}' already exists in {destination}!"
-
+            print(confirmation)  # "Attraction added!" or "A attraction with the name '{attraction}' already exists in {destination}!"
 
         # view attractions
         elif decision == "2":
-            attractions = "Your attractions:\n" + s.recv(4096).decode() # receive the attractions as a string
-            ClientHelper.get_instance().print_list(attractions) # print the attractions
+            attractions = "Your attractions:\n" + s.recv(4096).decode()  # receive the attractions as a string
+            ClientHelper.get_instance().print_list(attractions)  # print the attractions
 
             print("Would you like to see details of any attraction? (yes/no)")
             answer = ClientHelper.get_instance().yes_no_loop()
             s.send(answer.encode())
 
             if answer.lower() == "yes":
-                ClientHelper.get_instance().get_attraction_details_loop(s) # get details of a specific attraction (see clienthelper.py for the function)
+                ClientHelper.get_instance().get_attraction_details_loop(s)  # get details of a specific attraction (see clienthelper.py for the function)
 
         # update an attraction
         elif decision == "3":
@@ -246,19 +240,19 @@ def provider(s):
 
             # form to update the attraction details:
             # we don't ask for the name, destination and type because they should not be changed
-            print(confirmation) # "Your current contact information: {attraction.contact}\nPlease enter the new contact information or press 'enter' for no change: "
+            print(confirmation)  # "Your current contact information: {attraction.contact}\nPlease enter the new contact information or press 'enter' for no change: "
             new_contact = input(">>> ") or "-"
             s.send(new_contact.encode())
-            print(s.recv(4096).decode()) # "Your current price range: {attraction.price_range}\nPlease enter the new price range or press 'enter' for no change: "
+            print(s.recv(4096).decode())  # "Your current price range: {attraction.price_range}\nPlease enter the new price range or press 'enter' for no change: "
             new_price = input(">>> ") or "-"
             s.send(new_price.encode())
-            print(s.recv(4096).decode()) # "Your current description: {attraction.description}\nPlease enter the new description or press 'enter' for no change: "
+            print(s.recv(4096).decode())  # "Your current description: {attraction.description}\nPlease enter the new description or press 'enter' for no change: "
             new_description = input(">>> ") or "-"
             s.send(new_description.encode())
-            print(s.recv(4096).decode()) # "Your current special offer: {attraction.special_offer}\nPlease enter the new special offer or press 'enter' for no change: "
+            print(s.recv(4096).decode())  # "Your current special offer: {attraction.special_offer}\nPlease enter the new special offer or press 'enter' for no change: "
             new_special_offer = input(">>> ") or "-"
             s.send(new_special_offer.encode())
-            print(s.recv(4096).decode()) # "Attraction updated!"
+            print(s.recv(4096).decode())  # "Attraction updated!"
 
         # remove an attraction
         elif decision == "4":
@@ -271,7 +265,7 @@ def provider(s):
             s.send(destination.encode())
 
             # receive the confirmation or missing data message
-            print(s.recv(4096).decode()) # "Attraction removed!", "Attraction not found!", "Attraction belongs to another provider!"
+            print(s.recv(4096).decode())  # "Attraction removed!", "Attraction not found!", "Attraction belongs to another provider!"
 
         # logout
         elif decision == "5":
@@ -290,5 +284,3 @@ if __name__ == "__main__":
 
     print(f"Goodbye {user}!")
     s.close()  # close the connection
-
-
