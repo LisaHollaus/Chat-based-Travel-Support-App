@@ -33,8 +33,10 @@ class ServerHelper(object):
             user.password = password
 
             session.add(user)
-            session.commit() 
-        except:
+            session.commit()
+
+        # catch the exception if the user already exists
+        except Exception as e:
             session.close() 
             return "user already exists" 
         
@@ -133,13 +135,15 @@ class ServerHelper(object):
         user = session.get(User, self.logged_in_user_id)
         try:
             # adding the attraction to the user's favourite attractions only works if the attraction is not already in the list
-            user.favourite_attractions.append(attraction)  # throws an exception if the attraction is already in the list
+            user.favourite_attractions.append(attraction)  # raises an exception if the attraction is already in the list
             session.commit()
-            session.close()
             return "Attraction added to favourites!"
-        except:
-            session.close()
+
+        except Exception as e:
             return "Attraction already in favourites!"
+
+        finally:
+            session.close()
         
     def get_favourites(self):
         session = self.start_session()

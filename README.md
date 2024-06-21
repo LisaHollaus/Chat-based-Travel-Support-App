@@ -41,7 +41,7 @@ Overall I made some slight changes to my initial proposal as I realised, that so
 
 ### Things I would change if I had more time:
 Looking back and knowing what I know now I could have made some improvements/changes as I learned a lot along the way:
-- I could have used a context manager to close the connection at the end of many functions
+- I maybe could have used decorators to close the connection at the end of many functions
 - There probably would have been better ways to handle the databases relationships, as I had some problems with the many-to-many relationship between the Users-attraction and the Attractions-traveller_id. I had to use a workaround to make it work, but I believe there would have been a better way to do it.
 - I found out about the session.merge() function very late (to bind objects to a session). It could have made my code on many occasions simpler and shorter
 - Also, I believe there would have been better ways to test my client and server functions. With more time and research on mocking I could have found a way to test the client and server functions more efficiently and thoroughly

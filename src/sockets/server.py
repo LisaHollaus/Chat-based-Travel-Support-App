@@ -285,7 +285,7 @@ def provider_loop(conn):
         # logout 
         elif decision == "5":
             break
-    
+            
 
 if __name__ == "__main__":
     s = start_server()
