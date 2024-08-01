@@ -26,18 +26,9 @@ A chat based Travel-Support-App
 
 - For testing the application, you can find all necessary files in the test folder.
 - To run the tests, simply execute the test files in the test folder. (e.g.: python test_client.py)
-- Sadly running only "pytest" in the root directory didn't work for me, as the tests are not in the same directory as the files and the call seemed to not accept my absolute import statements. I tried to fix this, but I couldn't find a solution. I hope this is not a problem. :)
 
-### Changes from the initial proposal:
-Overall I made some slight changes to my initial proposal as I realised, that some ideas of mine weren't that practical and could be improved. For example:
-- I used one User class for travellers and providers instead of two, for better usability (especially when handling the Database).
-- I also omitted the Destination Class and added it as an attribute of the Attraction class, as it makes the code less complicated, but achieves the same result.
-- I added the option to store a travellers favourite attractions instead of the booking option, since the user(traveller) can get all necessary information to book a trip by requesting the details of an attraction and some attractions (e.g.: Bars) might not offer booking options.
-- Instead of Subclasses (Bars, Tours, Restaurants and Hotels) for the Attractions, I used the attribute .attraction_type in the Attraction class. That way the Provider is able to add any kind of type, which will give more individual possibilities.
 
-### Some additional notes on design choices:
-- I defined the User and Attraction class in one file, because separating them would have interfered with creating the many-to-many relationship between the Users-attraction and the Attractions-traveller_id. 
-- In my initial Proposal I had an "Agency", which I renamed to ServerHelper and ClientHelper, to separate the helper functions. 
+
 
 ### Things I would change if I had more time:
 Looking back and knowing what I know now I could have made some improvements/changes as I learned a lot along the way:
@@ -46,4 +37,4 @@ Looking back and knowing what I know now I could have made some improvements/cha
 - I found out about the session.merge() function very late (to bind objects to a session). It could have made my code on many occasions simpler and shorter
 - Also, I believe there would have been better ways to test my client and server functions. With more time and research on mocking I could have found a way to test the client and server functions more efficiently and thoroughly
 
-After all I think I learned a lot along the process, as many things were still new to me. So I believe this is not the optimal way to approach a travel-helper-app, but it helped me a lot in my learning process and I hope it's good enough. :) 
+After all I think I learned a lot along the process, as many things were still new to me. So I believe this is not the optimal way to approach a travel-helper-app, but it helped me a lot in my learning process. :) 
